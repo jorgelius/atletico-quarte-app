@@ -26,7 +26,7 @@ interface PerfilState {
   guardarPerfil: (p: Profile) => Promise<void>;
 }
 
-export const usePerfilStore = create<PerfilState>((set, get) => ({
+export const usePerfilStore = create<PerfilState>((set) => ({
   perfil:   null,
   session:  null,
   cargando: true,
