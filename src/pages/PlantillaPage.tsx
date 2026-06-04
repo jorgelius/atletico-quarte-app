@@ -1,0 +1,276 @@
+// ============================================================
+// PlantillaPage — Fase 2 completa
+// Tabs: Alineación | Jugadores
+// ============================================================
+import { useEffect, useRef, useState } from 'react';
+import { Users, Save, Download, Trash2, ChevronDown } from 'lucide-react';
+import Konva from 'konva';
+import { usePerfilStore } from '@/stores/perfilStore';
+import { usePlantillaStore } from '@/stores/plantillaStore';
+import { getFormaciones, getNumBanquillo, getNumTitulares } from '@/components/plantilla/formaciones';
+import FieldCanvas from '@/components/plantilla/FieldCanvas';
+import GestorJugadores from '@/components/plantilla/GestorJugadores';
+import JugadorModal from '@/components/plantilla/JugadorModal';
+
+type Tab = 'alineacion' | 'jugadores';
+
+const COLORES_BANQ: Record<string, string> = {
+  POR: 'border-amber-400 bg-amber-50',
+  DEF: 'border-blue-400 bg-blue-50',
+  MED: 'border-green-400 bg-green-50',
+  DEL: 'border-red-400 bg-red-50',
+};
+
+export default function PlantillaPage() {
+  const { perfil }  = usePerfilStore();
+  const store       = usePlantillaStore();
+  const stageRef    = useRef<Konva.Stage | null>(null);
+  const [tab, setTab]           = useState<Tab>('alineacion');
+  const [modalSlot, setModal]   = useState<number | null>(null);
+  const [showGuardar, setShowG] = useState(false);
+  const [nombreAlin, setNombreA] = useState('');
+  const [showCargar, setShowC]  = useState(false);
+  const [showFmt, setShowFmt]   = useState(false);
+
+  useEffect(() => {
+    if (perfil) store.cargar(perfil.id);
+  }, [perfil?.id]);
+
+  if (!perfil) return null;
+
+  const numTit  = getNumTitulares(store.formato);
+  const numBanq = getNumBanquillo(store.formato);
+  const formaciones = Object.keys(getFormaciones(store.formato));
+  const banqSlots  = store.slots.filter(s => !s.esTitular);
+  const jugadorMap = new Map(store.jugadores.map(j => [j.id, j]));
+
+  // ── Jugador en el modal ──
+  const modalJugadorId = modalSlot !== null ? store.slots[modalSlot]?.jugadorId : null;
+  const modalJugador   = modalJugadorId ? jugadorMap.get(modalJugadorId) : undefined;
+
+  // ── Export PNG ──
+  function exportarPNG() {
+    const uri = stageRef.current?.toDataURL({ pixelRatio: 2 });
+    if (!uri) return;
+    const a = document.createElement('a');
+    a.href = uri;
+    a.download = `alineacion_${store.formacion}_${Date.now()}.png`;
+    a.click();
+  }
+
+  // ── Guardar alineación ──
+  async function handleGuardar() {
+    if (!nombreAlin.trim()) return;
+    await store.guardarAlineacion(perfil!.id, nombreAlin.trim());
+    setShowG(false);
+    setNombreA('');
+  }
+
+  return (
+    <div className="flex flex-col min-h-screen bg-quarte-gris">
+      {/* Cabecera */}
+      <div className="bg-quarte-azul text-white px-4 pt-4 pb-3 flex items-center gap-3">
+        <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center">
+          <Users size={20} className="text-white" />
+        </div>
+        <div className="flex-1">
+          <h1 className="font-titulo text-lg font-bold leading-tight">Plantilla</h1>
+          <p className="text-blue-200 text-xs">{perfil.equipo} · {store.formato} · {store.formacion}</p>
+        </div>
+        {/* Exportar PNG */}
+        <button onClick={exportarPNG}
+          className="w-9 h-9 flex items-center justify-center rounded-xl bg-white/10
+                     hover:bg-white/20 transition-colors" title="Exportar PNG">
+          <Download size={18} />
+        </button>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex bg-quarte-azul border-t border-blue-800">
+        {(['alineacion', 'jugadores'] as Tab[]).map(t => (
+          <button key={t} onClick={() => setTab(t)}
+            className={`flex-1 py-2.5 text-sm font-titulo font-semibold transition-colors
+              ${tab === t ? 'text-white border-b-2 border-quarte-rojo' : 'text-blue-300 hover:text-white'}`}>
+            {t === 'alineacion' ? '⚽ Alineación' : '👥 Jugadores'}
+          </button>
+        ))}
+      </div>
+
+      <div className="flex-1 overflow-y-auto">
+        {/* ── TAB ALINEACIÓN ── */}
+        {tab === 'alineacion' && (
+          <div className="flex flex-col gap-3 p-3 max-w-lg mx-auto">
+
+            {/* Controles: formato + formación */}
+            <div className="flex gap-2">
+              {/* Formato F7/F11 */}
+              <div className="flex bg-white rounded-xl shadow-sm overflow-hidden flex-shrink-0">
+                {(['F7', 'F11'] as const).map(f => (
+                  <button key={f} onClick={() => store.cambiarFormato(f)}
+                    className={`px-4 py-2.5 text-sm font-titulo font-bold transition-colors
+                      ${store.formato === f
+                        ? 'bg-quarte-azul text-white'
+                        : 'text-gray-500 hover:bg-gray-50'
+                      }`}>
+                    {f}
+                  </button>
+                ))}
+              </div>
+
+              {/* Selector de formación */}
+              <div className="relative flex-1">
+                <button onClick={() => setShowFmt(v => !v)}
+                  className="w-full flex items-center justify-between gap-2 bg-white rounded-xl
+                             shadow-sm px-4 py-2.5 text-sm font-titulo font-bold text-quarte-azul">
+                  {store.formacion}
+                  <ChevronDown size={16} />
+                </button>
+                {showFmt && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-lg z-30
+                                  border border-gray-100 max-h-48 overflow-y-auto">
+                    {formaciones.map(f => (
+                      <button key={f} onClick={() => { store.cambiarFormacion(f); setShowFmt(false); }}
+                        className={`w-full text-left px-4 py-2.5 text-sm font-titulo font-semibold
+                          hover:bg-quarte-azulClaro transition-colors
+                          ${f === store.formacion ? 'text-quarte-azul bg-quarte-azulClaro' : 'text-quarte-negro'}`}>
+                        {f}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Campo */}
+            <FieldCanvas
+              formato={store.formato}
+              slots={store.slots}
+              jugadores={store.jugadores}
+              seleccionado={store.seleccionado}
+              onSelectSlot={store.seleccionarSlot}
+              onMoveSlot={store.moverASlot}
+              onOpenModal={setModal}
+              stageRef={stageRef}
+            />
+
+            {/* Instrucción */}
+            <p className="text-xs text-gray-400 text-center">
+              Toca un jugador para seleccionarlo · Toca otro para intercambiar · Doble toque para editar
+            </p>
+
+            {/* Banquillo */}
+            <div>
+              <p className="font-titulo text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+                Banquillo ({banqSlots.filter(s => s.jugadorId).length}/{numBanq})
+              </p>
+              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                {banqSlots.map(slot => {
+                  const jug = slot.jugadorId ? jugadorMap.get(slot.jugadorId) : undefined;
+                  const isSel = store.seleccionado === String(slot.slotIdx);
+                  return (
+                    <button
+                      key={slot.slotIdx}
+                      onClick={() => {
+                        if (store.seleccionado !== null) {
+                          store.moverASlot(slot.slotIdx);
+                        } else if (jug) {
+                          store.seleccionarSlot(slot.slotIdx);
+                        }
+                      }}
+                      className={`flex-shrink-0 w-16 h-16 rounded-xl border-2 flex flex-col
+                                  items-center justify-center transition-all
+                                  ${jug ? COLORES_BANQ[jug.posicion] : 'border-dashed border-gray-300 bg-gray-50'}
+                                  ${isSel ? 'ring-2 ring-yellow-400 ring-offset-1' : ''}`}>
+                      {jug ? (
+                        <>
+                          <span className="font-titulo font-bold text-lg leading-none">{jug.dorsal}</span>
+                          <span className="text-[9px] font-cuerpo truncate px-1">{jug.nombre.split(' ')[0]}</span>
+                        </>
+                      ) : (
+                        <span className="text-gray-300 text-xs">{slot.slotIdx - numTit + 1}</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Acciones de alineación */}
+            <div className="flex gap-2">
+              <button onClick={() => setShowG(v => !v)}
+                className="btn-secundario flex-1 flex items-center justify-center gap-2 text-sm">
+                <Save size={16} /> Guardar
+              </button>
+              <button onClick={() => setShowC(v => !v)}
+                className="btn-outline flex-1 text-sm">
+                Cargar
+              </button>
+            </div>
+
+            {/* Formulario guardar */}
+            {showGuardar && (
+              <div className="card flex flex-col gap-3">
+                <p className="font-titulo font-bold text-sm text-quarte-negro">Guardar alineación</p>
+                <input value={nombreAlin} onChange={e => setNombreA(e.target.value)}
+                  placeholder="Nombre (ej: vs Real Zaragoza)"
+                  className="w-full px-3 py-2.5 rounded-xl border-2 border-gray-200
+                             focus:border-quarte-azul outline-none text-sm font-cuerpo" />
+                <div className="flex gap-2">
+                  <button onClick={() => setShowG(false)} className="btn-outline flex-1 text-sm">Cancelar</button>
+                  <button onClick={handleGuardar} className="btn-primario flex-1 text-sm">Guardar</button>
+                </div>
+              </div>
+            )}
+
+            {/* Lista alineaciones guardadas */}
+            {showCargar && (
+              <div className="card flex flex-col gap-2">
+                <p className="font-titulo font-bold text-sm text-quarte-negro">Alineaciones guardadas</p>
+                {store.alineacionesGuardadas.length === 0 && (
+                  <p className="text-sm text-gray-400">Sin alineaciones guardadas.</p>
+                )}
+                {store.alineacionesGuardadas.map(a => (
+                  <div key={a.id} className="flex items-center gap-3 bg-gray-50 rounded-xl px-3 py-2">
+                    <div className="flex-1">
+                      <p className="font-titulo font-semibold text-sm text-quarte-negro">{a.nombre}</p>
+                      <p className="text-xs text-gray-400">{a.formato} · {a.formacion}</p>
+                    </div>
+                    <button onClick={() => { store.cargarAlineacion(a); setShowC(false); }}
+                      className="text-xs text-quarte-azul font-semibold hover:underline">Cargar</button>
+                    <button onClick={() => store.borrarAlineacion(a.id)}
+                      className="w-7 h-7 flex items-center justify-center rounded-lg
+                                 bg-red-50 text-quarte-rojo hover:bg-red-100">
+                      <Trash2 size={12} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── TAB JUGADORES ── */}
+        {tab === 'jugadores' && (
+          <div className="p-4 max-w-lg mx-auto">
+            <GestorJugadores
+              jugadores={store.jugadores}
+              ownerId={perfil.id}
+              onAgregar={store.agregarJugador}
+              onEditar={store.editarJugador}
+              onBorrar={store.borrarJugador}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Modal de anotaciones */}
+      {modalSlot !== null && modalJugador && (
+        <JugadorModal
+          jugador={modalJugador}
+          onGuardar={j => { store.editarJugador(j); setModal(null); }}
+          onCerrar={() => setModal(null)}
+        />
+      )}
+    </div>
+  );
+}

@@ -1,0 +1,77 @@
+/* ============================================================
+   CD Atlético Quarte — Estilos globales
+   ============================================================ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    color: #1A1A1A;
+    background-color: #F3F4F6;
+  }
+
+  h1, h2, h3, h4, h5 {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    color: inherit;
+  }
+
+  #root {
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+@layer utilities {
+  /* Oculta scrollbar manteniendo la funcionalidad */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Botón táctil grande (accesible en campo) */
+  .btn-touch {
+    @apply min-h-[48px] px-5 py-3 rounded-xl font-titulo font-semibold text-sm
+           transition-all active:scale-95 select-none cursor-pointer;
+  }
+
+  .btn-primario {
+    @apply btn-touch bg-quarte-rojo text-white shadow-md
+           hover:bg-red-700 active:bg-red-800;
+  }
+
+  .btn-secundario {
+    @apply btn-touch bg-quarte-azul text-white shadow-md
+           hover:bg-blue-900 active:bg-blue-950;
+  }
+
+  .btn-outline {
+    @apply btn-touch border-2 border-quarte-azul text-quarte-azul
+           hover:bg-quarte-azulClaro;
+  }
+
+  /* Tarjeta estándar */
+  .card {
+    @apply bg-white rounded-2xl shadow-card p-4;
+  }
+}
