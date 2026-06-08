@@ -135,3 +135,93 @@ export interface Favorito {
   item_id: string;
   creado_en: number;
 }
+
+// --- PIZARRA TÁCTICA LIBRE ---
+export interface JugadorCanvas {
+  id: string;
+  tipo: 'local' | 'rival' | 'balon' | 'cono';
+  dorsal?: number;
+  nombre?: string;
+  x: number;
+  y: number;
+  esPortero?: boolean;
+}
+
+export interface TrazoCanvas {
+  id: string;
+  puntos: number[];
+  color: string;
+  grosor: number;
+}
+
+export interface FlechaCanvas {
+  id: string;
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  color: string;
+  estilo: 'solida' | 'discontinua';
+  grosor: number;
+}
+
+export interface ZonaCanvas {
+  id: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  color: string;
+}
+
+export interface TextoCanvas {
+  id: string;
+  x: number;
+  y: number;
+  texto: string;
+  color: string;
+}
+
+export interface DatosPizarra {
+  jugadores: JugadorCanvas[];
+  trazos:    TrazoCanvas[];
+  flechas:   FlechaCanvas[];
+  zonas:     ZonaCanvas[];
+  textos:    TextoCanvas[];
+}
+
+export interface PizarraTactica {
+  id:             string;
+  coach_id:       string;
+  titulo:         string;
+  formato:        FormatoPartido;
+  canvas_data:    DatosPizarra;
+  creado_en:      number;
+  actualizado_en: number;
+}
+
+// --- COMPETICIÓN ---
+export interface Partido {
+  id:          string;
+  equipo:      string;   // "Alevín A"
+  rival:       string;   // "SD Zaragoza B"
+  fecha:       string;   // ISO date "2025-10-12"
+  hora:        string;   // "17:00"
+  lugar:       string;   // "Campo Municipal Cuarte de Huerva"
+  esLocal:     boolean;
+  competicion: string;   // "Liga Aragón Alevín"
+  jornada:     number;
+}
+
+export interface ClasificacionRow {
+  posicion:        number;
+  equipo:          string;
+  pj:              number;  // Partidos jugados
+  pg:              number;  // Ganados
+  pe:              number;  // Empatados
+  pp:              number;  // Perdidos
+  gf:              number;  // Goles a favor
+  gc:              number;  // Goles en contra
+  pts:             number;  // Puntos
+  esNuestroEquipo: boolean;
+}

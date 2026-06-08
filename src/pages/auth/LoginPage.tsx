@@ -90,9 +90,17 @@ export default function LoginPage() {
 
           {/* Contraseña */}
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="pwd-login" className="font-titulo font-semibold text-sm text-quarte-negro">
-              Contraseña
-            </label>
+            <div className="flex items-center justify-between">
+              <label htmlFor="pwd-login" className="font-titulo font-semibold text-sm text-quarte-negro">
+                Contraseña
+              </label>
+              <Link
+                to="/forgot-password"
+                className="text-xs text-quarte-azul hover:underline font-semibold"
+              >
+                ¿Olvidaste tu contraseña?
+              </Link>
+            </div>
             <div className="relative">
               <Lock size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
               <input

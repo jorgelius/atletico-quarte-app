@@ -1,0 +1,53 @@
+{
+  "name": "CD Atlético Quarte",
+  "short_name": "Atl. Quarte",
+  "description": "App de gestión para CD Atlético Quarte – plantilla, entrenamientos, tácticas y pizarra.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#014181",
+  "background_color": "#014181",
+  "lang": "es",
+  "categories": ["sports", "productivity"],
+  "icons": [
+    {
+      "src": "/icons/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Plantilla",
+      "short_name": "Plantilla",
+      "url": "/plantilla",
+      "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Pizarra Táctica",
+      "short_name": "Pizarra",
+      "url": "/pizarra-tactica",
+      "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }]
+    }
+  ]
+}

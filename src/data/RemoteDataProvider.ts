@@ -8,6 +8,7 @@ import type {
   Profile, Jugador, Alineacion, Entrenamiento, Tactica, Favorito,
   Posicion, Rol, CategoriaEntrenamiento, NivelEdad, TipoTactica,
   FormatoPartido, JugadorEnCampo, TipoFavorito,
+  PizarraTactica, DatosPizarra,
 } from '@/types';
 
 let _perfilId: string | null = null;
@@ -216,6 +217,29 @@ function favoritoToDb(f: Favorito) {
   };
 }
 
+// pizarras_tacticas: columnas propias (canvas_data jsonb)
+function dbToPizarra(r: Record<string, unknown>): PizarraTactica {
+  return {
+    id:             r.id as string,
+    coach_id:       r.coach_id as string,
+    titulo:         (r.titulo as string) ?? 'Sin título',
+    formato:        (r.formato as FormatoPartido) ?? 'F11',
+    canvas_data:    (r.canvas_data as DatosPizarra) ?? { jugadores: [], trazos: [], flechas: [], zonas: [], textos: [] },
+    creado_en:      r.creado_en ? new Date(r.creado_en as string).getTime() : Date.now(),
+    actualizado_en: r.actualizado_en ? new Date(r.actualizado_en as string).getTime() : Date.now(),
+  };
+}
+function pizarraToDb(p: PizarraTactica) {
+  return {
+    id:             p.id,
+    coach_id:       p.coach_id,
+    titulo:         p.titulo,
+    formato:        p.formato,
+    canvas_data:    p.canvas_data,
+    actualizado_en: new Date().toISOString(),
+  };
+}
+
 // ── Provider ─────────────────────────────────────────────────
 
 export class RemoteDataProvider implements DataProvider {
@@ -399,5 +423,26 @@ export class RemoteDataProvider implements DataProvider {
       .eq('coach_id', user_id)
       .eq('item_id', item_id);
     return (count ?? 0) > 0;
+  }
+
+  // ── PIZARRAS TÁCTICAS ─────────────────────────────────────
+  async getPizarras(coach_id: string): Promise<PizarraTactica[]> {
+    const { data, error } = await supabase
+      .from('pizarras_tacticas')
+      .select('*')
+      .eq('coach_id', coach_id)
+      .order('actualizado_en', { ascending: false });
+    if (error) { console.error('[Supabase] getPizarras:', error.message); return []; }
+    return ((data ?? []) as Record<string, unknown>[]).map(dbToPizarra);
+  }
+
+  async savePizarra(p: PizarraTactica): Promise<void> {
+    const { error } = await supabase.from('pizarras_tacticas').upsert(pizarraToDb(p));
+    check(error, 'savePizarra');
+  }
+
+  async deletePizarra(id: string): Promise<void> {
+    const { error } = await supabase.from('pizarras_tacticas').delete().eq('id', id);
+    check(error, 'deletePizarra');
   }
 }

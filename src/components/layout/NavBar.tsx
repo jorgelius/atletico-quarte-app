@@ -9,15 +9,17 @@ import {
   Dumbbell,
   LayoutGrid,
   UserCircle,
+  PencilRuler,
 } from 'lucide-react';
 import { usePerfilStore } from '@/stores/perfilStore';
 import escudoImg from '@/assets/escudo.png';
 
 const items = [
-  { to: '/plantilla',        icon: Users,      label: 'Plantilla'       },
-  { to: '/entrenamientos',   icon: Dumbbell,   label: 'Entrenam.'       },
-  { to: '/tacticas',         icon: LayoutGrid, label: 'Tácticas'        },
-  { to: '/perfil',           icon: UserCircle, label: 'Perfil'          },
+  { to: '/plantilla',        icon: Users,        label: 'Plantilla' },
+  { to: '/entrenamientos',   icon: Dumbbell,     label: 'Entrenam.' },
+  { to: '/tacticas',         icon: LayoutGrid,   label: 'Tácticas'  },
+  { to: '/pizarra-tactica',  icon: PencilRuler,  label: 'Pizarra'   },
+  { to: '/perfil',           icon: UserCircle,   label: 'Perfil'    },
 ];
 
 export default function NavBar() {

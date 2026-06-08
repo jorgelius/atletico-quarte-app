@@ -184,4 +184,9 @@ export class LocalDataProvider implements DataProvider {
       .count();
     return count > 0;
   }
+
+  // Pizarras tácticas: no implementadas en el proveedor local (solo Supabase)
+  async getPizarras()    { return []; }
+  async savePizarra()    { /* no-op */ }
+  async deletePizarra()  { /* no-op */ }
 }

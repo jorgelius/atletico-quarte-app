@@ -16,6 +16,7 @@ import type {
   Entrenamiento,
   Tactica,
   Favorito,
+  PizarraTactica,
 } from '@/types';
 
 // Filtros de búsqueda para la biblioteca de entrenamientos
@@ -71,4 +72,9 @@ export interface DataProvider {
   addFavorito(f: Favorito): Promise<void>;
   removeFavorito(user_id: string, item_id: string): Promise<void>;
   isFavorito(user_id: string, item_id: string): Promise<boolean>;
+
+  // -- PIZARRAS TÁCTICAS --
+  getPizarras(coach_id: string): Promise<PizarraTactica[]>;
+  savePizarra(p: PizarraTactica): Promise<void>;
+  deletePizarra(id: string): Promise<void>;
 }
