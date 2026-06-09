@@ -200,7 +200,51 @@ export interface PizarraTactica {
   actualizado_en: number;
 }
 
-// --- COMPETICIÓN ---
+// --- PARTIDO (MATCH) ---
+export type MatchStatus    = 'scheduled' | 'played' | 'cancelled' | 'postponed';
+export type MatchLocation  = 'home' | 'away' | 'neutral';
+export type MatchEventType = 'goal' | 'assist' | 'yellow_card' | 'red_card' | 'mvp';
+
+export interface Match {
+  id:            string;
+  team_id:       string;
+  season:        string;
+  date:          string;        // "YYYY-MM-DD"
+  time?:         string;        // "HH:MM" opcional
+  rival_name:    string;
+  location:      MatchLocation;
+  competition?:  string;
+  goals_for:     number;
+  goals_against: number;
+  status:        MatchStatus;
+  notes?:        string;
+  created_at:    string;
+  updated_at:    string;
+}
+
+export interface MatchEvent {
+  id:          string;
+  match_id:    string;
+  player_id?:  string;
+  player_name?: string;
+  event_type:  MatchEventType;
+  minute?:     number;
+  created_at:  string;
+}
+
+// --- ASISTENCIA A ENTRENAMIENTOS ---
+export type AttendanceStatus = 'present' | 'absent' | 'justified' | 'late';
+
+export interface TrainingAttendance {
+  id:          string;
+  training_id: string;
+  player_id:   string;
+  status:      AttendanceStatus;
+  notes?:      string;
+  recorded_at: string;
+}
+
+// --- COMPETICIÓN (datos estáticos legacy) ---
 export interface Partido {
   id:          string;
   equipo:      string;   // "Alevín A"

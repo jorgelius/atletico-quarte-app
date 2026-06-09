@@ -3,27 +3,39 @@
 // Móvil/tablet: barra inferior fija
 // Desktop (lg+): barra lateral izquierda
 // ============================================================
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import {
   Users,
   Dumbbell,
   LayoutGrid,
   UserCircle,
   PencilRuler,
+  House,
+  Shield,
 } from 'lucide-react';
 import { usePerfilStore } from '@/stores/perfilStore';
 import escudoImg from '@/assets/escudo.png';
 
-const items = [
+const itemsDesktop = [
   { to: '/plantilla',        icon: Users,        label: 'Plantilla' },
+  { to: '/partidos',         icon: Shield,       label: 'Partidos'  },
   { to: '/entrenamientos',   icon: Dumbbell,     label: 'Entrenam.' },
   { to: '/tacticas',         icon: LayoutGrid,   label: 'Tácticas'  },
   { to: '/pizarra-tactica',  icon: PencilRuler,  label: 'Pizarra'   },
   { to: '/perfil',           icon: UserCircle,   label: 'Perfil'    },
 ];
 
+const itemsMovil = [
+  { to: '/inicio',           icon: House,        label: 'Inicio'    },
+  { to: '/plantilla',        icon: Users,        label: 'Plantilla' },
+  { to: '/partidos',         icon: Shield,       label: 'Partidos'  },
+  { to: '/entrenamientos',   icon: Dumbbell,     label: 'Entrenam.' },
+  { to: '/perfil',           icon: UserCircle,   label: 'Perfil'    },
+];
+
 export default function NavBar() {
   const { perfil } = usePerfilStore();
+  const navigate   = useNavigate();
 
   return (
     <>
@@ -32,17 +44,21 @@ export default function NavBar() {
                       bg-quarte-azul text-white fixed top-0 left-0 z-40
                       shadow-lg select-none">
 
-        {/* Logo */}
-        <div className="flex items-center gap-3 px-4 py-5 border-b border-blue-800">
+        {/* Logo — clickable → /inicio */}
+        <button
+          onClick={() => navigate('/inicio')}
+          className="flex items-center gap-3 px-4 py-5 border-b border-blue-800
+                     hover:bg-blue-800 transition-colors w-full text-left"
+        >
           <img src={escudoImg} alt="Escudo CD Atlético Quarte" className="w-9 h-9 object-contain drop-shadow-sm" />
           <span className="hidden xl:block font-titulo font-bold text-sm leading-tight text-white">
             CD Atlético<br/>Quarte
           </span>
-        </div>
+        </button>
 
         {/* Items */}
         <div className="flex flex-col gap-1 mt-4 px-2 flex-1">
-          {items.map(({ to, icon: Icon, label }) => (
+          {itemsDesktop.map(({ to, icon: Icon, label }) => (
             <NavLink
               key={to}
               to={to}
@@ -73,7 +89,7 @@ export default function NavBar() {
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40
                       bg-quarte-azul shadow-nav flex justify-around
                       safe-area-padding-bottom">
-        {items.map(({ to, icon: Icon, label }) => (
+        {itemsMovil.map(({ to, icon: Icon, label }) => (
           <NavLink
             key={to}
             to={to}

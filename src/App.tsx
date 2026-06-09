@@ -23,6 +23,8 @@ import EntrenamientosPage   from '@/pages/EntrenamientosPage';
 import TacticasPage         from '@/pages/TacticasPage';
 import PizarraTacticaPage  from '@/pages/PizarraTacticaPage';
 import PerfilPage           from '@/pages/PerfilPage';
+import PartidosPage         from '@/pages/PartidosPage';
+import AsistenciaPage       from '@/pages/AsistenciaPage';
 
 export default function App() {
   const { inicializarAuth } = usePerfilStore();
@@ -45,13 +47,15 @@ export default function App() {
         {/* ── Rutas PROTEGIDAS (con NavBar + guard de perfil) ── */}
         <Route element={<PerfilGuard />}>
           <Route element={<AppLayout />}>
-            <Route index                   element={<Navigate to="/inicio" replace />} />
-            <Route path="/inicio"          element={<InicioPage />} />
-            <Route path="/plantilla"       element={<PlantillaPage />} />
-            <Route path="/entrenamientos"  element={<EntrenamientosPage />} />
-            <Route path="/tacticas"           element={<TacticasPage />} />
-            <Route path="/pizarra-tactica"  element={<PizarraTacticaPage />} />
-            <Route path="/perfil"           element={<PerfilPage />} />
+            <Route index                                         element={<Navigate to="/inicio" replace />} />
+            <Route path="/inicio"                              element={<InicioPage />} />
+            <Route path="/plantilla"                           element={<PlantillaPage />} />
+            <Route path="/partidos"                            element={<PartidosPage />} />
+            <Route path="/entrenamientos"                      element={<EntrenamientosPage />} />
+            <Route path="/entrenamientos/:id/asistencia"       element={<AsistenciaPage />} />
+            <Route path="/tacticas"                            element={<TacticasPage />} />
+            <Route path="/pizarra-tactica"                     element={<PizarraTacticaPage />} />
+            <Route path="/perfil"                              element={<PerfilPage />} />
           </Route>
         </Route>
 
