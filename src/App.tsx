@@ -25,6 +25,7 @@ import PizarraTacticaPage  from '@/pages/PizarraTacticaPage';
 import PerfilPage           from '@/pages/PerfilPage';
 import PartidosPage         from '@/pages/PartidosPage';
 import AsistenciaPage       from '@/pages/AsistenciaPage';
+import PasarListaPage       from '@/pages/PasarListaPage';
 
 export default function App() {
   const { inicializarAuth } = usePerfilStore();
@@ -53,6 +54,7 @@ export default function App() {
             <Route path="/partidos"                            element={<PartidosPage />} />
             <Route path="/entrenamientos"                      element={<EntrenamientosPage />} />
             <Route path="/entrenamientos/:id/asistencia"       element={<AsistenciaPage />} />
+            <Route path="/pasar-lista"                         element={<PasarListaPage />} />
             <Route path="/tacticas"                            element={<TacticasPage />} />
             <Route path="/pizarra-tactica"                     element={<PizarraTacticaPage />} />
             <Route path="/perfil"                              element={<PerfilPage />} />
