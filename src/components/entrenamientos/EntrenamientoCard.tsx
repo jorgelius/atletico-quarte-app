@@ -1,5 +1,6 @@
-import { Clock, Users, Star } from 'lucide-react';
+import { Clock, Users, Star, ClipboardList } from 'lucide-react';
 import type { Entrenamiento } from '@/types';
+import type { ResumenEntrenamiento } from '@/stores/asistenciaStore';
 
 const COLOR_CAT: Record<string, string> = {
   ataque:       'bg-red-100 text-red-700',
@@ -16,9 +17,11 @@ interface Props {
   isFav: boolean;
   onOpen: () => void;
   onToggleFav: () => void;
+  resumenAsistencia?: ResumenEntrenamiento | null;
+  onAsistencia?: () => void;
 }
 
-export default function EntrenamientoCard({ item, isFav, onOpen, onToggleFav }: Props) {
+export default function EntrenamientoCard({ item, isFav, onOpen, onToggleFav, resumenAsistencia, onAsistencia }: Props) {
   return (
     <div className="card flex flex-col gap-2 active:scale-[0.98] transition-transform cursor-pointer"
          onClick={onOpen}>
@@ -54,6 +57,21 @@ export default function EntrenamientoCard({ item, isFav, onOpen, onToggleFav }: 
         <span className="flex items-center gap-1"><Users size={12}/> {item.num_jugadores_min}–{item.num_jugadores_max} jug.</span>
         <span className="ml-auto capitalize">{item.nivel}</span>
       </div>
+
+      {/* Indicador de asistencia */}
+      {onAsistencia !== undefined && (
+        <button
+          onClick={e => { e.stopPropagation(); onAsistencia(); }}
+          className={`flex items-center gap-1.5 self-start px-2.5 py-1 rounded-full text-xs font-titulo font-semibold transition-colors
+            ${resumenAsistencia
+              ? 'bg-green-100 text-green-700 hover:bg-green-200'
+              : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>
+          <ClipboardList size={11} />
+          {resumenAsistencia
+            ? `✓ ${resumenAsistencia.presentes}/${resumenAsistencia.total} jugadores`
+            : 'Pasar lista'}
+        </button>
+      )}
     </div>
   );
 }

@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { Plus, Edit2, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import type { Jugador, Posicion } from '@/types';
+import type { EstadisticaJugador } from '@/stores/asistenciaStore';
 import { Avatar } from '@/components/ui/Avatar';
 
 const COLOR_POS: Record<Posicion, string> = {
@@ -24,6 +25,7 @@ interface Props {
   onAgregar: (j: Jugador) => Promise<void>;
   onEditar:  (j: Jugador) => Promise<void>;
   onBorrar:  (id: string) => Promise<void>;
+  estadisticasAsistencia?: EstadisticaJugador[];
 }
 
 function JugadorForm({
@@ -93,7 +95,7 @@ function JugadorForm({
   );
 }
 
-export default function GestorJugadores({ jugadores, ownerId, onAgregar, onEditar, onBorrar }: Props) {
+export default function GestorJugadores({ jugadores, ownerId, onAgregar, onEditar, onBorrar, estadisticasAsistencia }: Props) {
   const [editando,  setEditando]  = useState<Jugador | null>(null);
   const [mostrando, setMostrando] = useState(true);
   const [nuevo,     setNuevo]     = useState(false);
@@ -141,7 +143,15 @@ export default function GestorJugadores({ jugadores, ownerId, onAgregar, onEdita
                   <Avatar nombre={j.nombre} foto={j.foto_b64} size="sm" />
                   <div className="flex-1 min-w-0">
                     <p className="font-titulo font-semibold text-sm text-quarte-negro truncate">{j.nombre}</p>
-                    <p className="text-xs text-gray-400">#{j.dorsal}</p>
+                    <p className="text-xs text-gray-400">#{j.dorsal}
+                      {(() => {
+                        const stat = estadisticasAsistencia?.find(e => e.player_id === j.id);
+                        if (!stat) return null;
+                        const pct = stat.total > 0 ? Math.round((stat.asistidos / stat.total) * 100) : 0;
+                        const color = pct >= 80 ? 'text-green-600' : pct >= 60 ? 'text-amber-500' : 'text-quarte-rojo';
+                        return <span className={`ml-1.5 font-semibold ${color}`}>{pct}% asist.</span>;
+                      })()}
+                    </p>
                   </div>
                   <span className={`text-xs font-titulo font-bold px-2 py-0.5 rounded-full ${COLOR_POS[j.posicion]}`}>
                     {j.posicion}

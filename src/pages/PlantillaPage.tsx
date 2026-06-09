@@ -3,16 +3,17 @@
 // Tabs: Alineación | Jugadores
 // ============================================================
 import { useEffect, useRef, useState } from 'react';
-import { Users, Save, Download, Trash2, ChevronDown } from 'lucide-react';
+import { Users, Save, Download, Trash2, ChevronDown, ClipboardList } from 'lucide-react';
 import Konva from 'konva';
 import { usePerfilStore } from '@/stores/perfilStore';
 import { usePlantillaStore } from '@/stores/plantillaStore';
+import { useAsistenciaStore } from '@/stores/asistenciaStore';
 import { getFormaciones, getNumBanquillo, getNumTitulares } from '@/components/plantilla/formaciones';
 import FieldCanvas from '@/components/plantilla/FieldCanvas';
 import GestorJugadores from '@/components/plantilla/GestorJugadores';
 import JugadorModal from '@/components/plantilla/JugadorModal';
 
-type Tab = 'alineacion' | 'jugadores';
+type Tab = 'alineacion' | 'jugadores' | 'asistencia';
 
 const COLORES_BANQ: Record<string, string> = {
   POR: 'border-amber-400 bg-amber-50',
@@ -22,9 +23,10 @@ const COLORES_BANQ: Record<string, string> = {
 };
 
 export default function PlantillaPage() {
-  const { perfil }  = usePerfilStore();
-  const store       = usePlantillaStore();
-  const stageRef    = useRef<Konva.Stage | null>(null);
+  const { perfil }       = usePerfilStore();
+  const store            = usePlantillaStore();
+  const asistenciaStore  = useAsistenciaStore();
+  const stageRef         = useRef<Konva.Stage | null>(null);
   const [tab, setTab]           = useState<Tab>('alineacion');
   const [modalSlot, setModal]   = useState<number | null>(null);
   const [showGuardar, setShowG] = useState(false);
@@ -33,7 +35,9 @@ export default function PlantillaPage() {
   const [showFmt, setShowFmt]   = useState(false);
 
   useEffect(() => {
-    if (perfil) store.cargar(perfil.id);
+    if (!perfil) return;
+    store.cargar(perfil.id);
+    asistenciaStore.cargarResumenEquipo(perfil.id);
   }, [perfil?.id]);
 
   if (!perfil) return null;
@@ -87,11 +91,15 @@ export default function PlantillaPage() {
 
       {/* Tabs */}
       <div className="flex bg-quarte-azul border-t border-blue-800">
-        {(['alineacion', 'jugadores'] as Tab[]).map(t => (
-          <button key={t} onClick={() => setTab(t)}
-            className={`flex-1 py-2.5 text-sm font-titulo font-semibold transition-colors
-              ${tab === t ? 'text-white border-b-2 border-quarte-rojo' : 'text-blue-300 hover:text-white'}`}>
-            {t === 'alineacion' ? '⚽ Alineación' : '👥 Jugadores'}
+        {([
+          { id: 'alineacion', label: '⚽ Alineación' },
+          { id: 'jugadores',  label: '👥 Jugadores'  },
+          { id: 'asistencia', label: '📋 Asistencia' },
+        ] as { id: Tab; label: string }[]).map(t => (
+          <button key={t.id} onClick={() => setTab(t.id)}
+            className={`flex-1 py-2.5 text-xs font-titulo font-semibold transition-colors
+              ${tab === t.id ? 'text-white border-b-2 border-quarte-rojo' : 'text-blue-300 hover:text-white'}`}>
+            {t.label}
           </button>
         ))}
       </div>
@@ -258,7 +266,70 @@ export default function PlantillaPage() {
               onAgregar={store.agregarJugador}
               onEditar={store.editarJugador}
               onBorrar={store.borrarJugador}
+              estadisticasAsistencia={asistenciaStore.estadisticasEquipo}
             />
+          </div>
+        )}
+
+        {/* ── TAB ASISTENCIA ── */}
+        {tab === 'asistencia' && (
+          <div className="p-4 max-w-lg mx-auto flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ClipboardList size={16} className="text-quarte-azul" />
+                <p className="font-titulo font-bold text-sm text-quarte-negro">Asistencia temporada</p>
+              </div>
+              {asistenciaStore.cargandoResumen && (
+                <div className="w-4 h-4 border-2 border-quarte-azul border-t-transparent rounded-full animate-spin" />
+              )}
+            </div>
+
+            {asistenciaStore.estadisticasEquipo.length === 0 && !asistenciaStore.cargandoResumen ? (
+              <div className="flex flex-col items-center py-12 text-gray-400 gap-3">
+                <ClipboardList size={40} className="opacity-20" />
+                <p className="font-titulo font-semibold text-sm">Sin datos de asistencia</p>
+                <p className="text-xs text-center">Pasa lista en los entrenamientos para ver estadísticas aquí.</p>
+              </div>
+            ) : (
+              <div className="card p-0 overflow-hidden">
+                {/* Cabecera tabla */}
+                <div className="flex items-center gap-2 px-4 py-2.5 bg-quarte-azulClaro border-b border-gray-100">
+                  <span className="flex-1 text-xs font-titulo font-bold text-quarte-azul">Jugador</span>
+                  <span className="w-10 text-right text-xs font-titulo font-bold text-quarte-azul">Asist.</span>
+                  <span className="w-8  text-right text-xs font-titulo font-bold text-quarte-azul">Total</span>
+                  <span className="w-10 text-right text-xs font-titulo font-bold text-quarte-azul">%</span>
+                </div>
+                {asistenciaStore.estadisticasEquipo.map((stat, idx) => {
+                  const pct = stat.total > 0 ? Math.round((stat.asistidos / stat.total) * 100) : 0;
+                  const barColor = pct >= 80 ? 'bg-quarte-verde' : pct >= 60 ? 'bg-amber-400' : 'bg-quarte-rojo';
+                  const textColor = pct >= 80 ? 'text-green-700' : pct >= 60 ? 'text-amber-600' : 'text-quarte-rojo';
+                  return (
+                    <div key={stat.player_id}
+                      className={`flex items-center gap-2 px-4 py-3 ${idx % 2 === 0 ? '' : 'bg-gray-50'}`}>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-titulo font-semibold text-sm text-quarte-negro truncate">
+                          {stat.player_name}
+                        </p>
+                        {/* Barra visual */}
+                        <div className="h-1.5 bg-gray-200 rounded-full mt-1 overflow-hidden w-full">
+                          <div
+                            className={`h-full rounded-full transition-all ${barColor}`}
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                      </div>
+                      <span className="w-10 text-right font-titulo font-bold text-sm text-quarte-negro">
+                        {stat.asistidos}
+                      </span>
+                      <span className="w-8 text-right text-xs text-gray-400">/{stat.total}</span>
+                      <span className={`w-10 text-right font-titulo font-bold text-sm ${textColor}`}>
+                        {pct}%
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
       </div>
