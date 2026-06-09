@@ -1,222 +1,68 @@
 // ============================================================
-// InicioPage — pantalla de inicio rica
-// Muestra: próximo partido + clasificación del equipo del usuario
+// InicioPage — pantalla de inicio
 // ============================================================
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  Users, Dumbbell, LayoutGrid,
-  Calendar, Trophy, MapPin, Clock,
-  ChevronRight, Home, Bus,
-} from 'lucide-react';
+import { Users, Dumbbell, LayoutGrid, ChevronRight, ClipboardList, Shield } from 'lucide-react';
 import { usePerfilStore } from '@/stores/perfilStore';
+import { useAsistenciaStore } from '@/stores/asistenciaStore';
+import { supabase } from '@/data/supabaseClient';
 import { Avatar } from '@/components/ui/Avatar';
-import { getProximoPartido, getClasificacion } from '@/data/competicionData';
-import type { Partido, ClasificacionRow } from '@/types';
 import escudoImg from '@/assets/escudo.png';
 
-// ── Accesos rápidos ──────────────────────────────────────────
 const SECCIONES = [
-  { to: '/plantilla',      Icon: Users,      label: 'Plantilla',      color: 'bg-quarte-azul'  },
-  { to: '/entrenamientos', Icon: Dumbbell,   label: 'Entrenos',       color: 'bg-quarte-rojo'  },
-  { to: '/tacticas',       Icon: LayoutGrid, label: 'Tácticas',       color: 'bg-quarte-verde' },
+  { to: '/plantilla',      Icon: Users,      label: 'Plantilla',  color: 'bg-quarte-azul'  },
+  { to: '/partidos',       Icon: Shield,     label: 'Partidos',   color: 'bg-quarte-negro'  },
+  { to: '/entrenamientos', Icon: Dumbbell,   label: 'Biblioteca', color: 'bg-quarte-rojo'  },
+  { to: '/tacticas',       Icon: LayoutGrid, label: 'Tácticas',   color: 'bg-quarte-verde' },
 ] as const;
 
-// ── Subcomponente: Próximo Partido ───────────────────────────
-function ProximoPartidoCard({ partido }: { partido: Partido }) {
-  const fechaObj = new Date(`${partido.fecha}T${partido.hora}`);
-  const dia      = fechaObj.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
-
-  return (
-    <div className="flex flex-col gap-4">
-      {/* Cabecera de la card */}
-      <div className="flex items-center justify-between">
-        <span className="text-[10px] font-titulo font-bold text-gray-400 uppercase tracking-widest">
-          {partido.competicion}
-        </span>
-        <span className="text-[10px] font-titulo font-semibold text-quarte-azul bg-quarte-azulClaro
-                         px-2 py-0.5 rounded-full">
-          J{partido.jornada}
-        </span>
-      </div>
-
-      {/* Visual enfrentamiento */}
-      <div className="flex items-center justify-between gap-2">
-        {/* Local */}
-        <div className="flex flex-col items-center gap-1.5 flex-1">
-          <div className={`w-14 h-14 rounded-full flex items-center justify-center shadow-md
-                           ${partido.esLocal ? 'bg-quarte-azul' : 'bg-gray-100'}`}>
-            {partido.esLocal
-              ? <img src={escudoImg} alt="Atlético Quarte" className="w-10 h-10 object-contain" />
-              : <span className="text-gray-400 font-titulo font-bold text-xs text-center leading-tight px-1">
-                  {partido.rival.split(' ').slice(0, 2).join('\n')}
-                </span>
-            }
-          </div>
-          <p className={`text-xs font-titulo font-bold text-center leading-tight
-                         ${partido.esLocal ? 'text-quarte-azul' : 'text-quarte-negro'}`}>
-            {partido.esLocal ? 'Atlético\nQuarte' : partido.rival}
-          </p>
-          {partido.esLocal && (
-            <span className="flex items-center gap-0.5 text-[10px] text-quarte-verde font-semibold">
-              <Home size={10} /> LOCAL
-            </span>
-          )}
-        </div>
-
-        {/* VS */}
-        <div className="flex flex-col items-center">
-          <span className="font-titulo font-extrabold text-2xl text-gray-300">vs</span>
-        </div>
-
-        {/* Visitante */}
-        <div className="flex flex-col items-center gap-1.5 flex-1">
-          <div className={`w-14 h-14 rounded-full flex items-center justify-center shadow-md
-                           ${!partido.esLocal ? 'bg-quarte-azul' : 'bg-gray-100'}`}>
-            {!partido.esLocal
-              ? <img src={escudoImg} alt="Atlético Quarte" className="w-10 h-10 object-contain" />
-              : <span className="text-gray-500 font-titulo font-bold text-xs text-center leading-tight px-1">
-                  {partido.rival}
-                </span>
-            }
-          </div>
-          <p className={`text-xs font-titulo font-bold text-center leading-tight
-                         ${!partido.esLocal ? 'text-quarte-azul' : 'text-quarte-negro'}`}>
-            {!partido.esLocal ? 'Atlético\nQuarte' : partido.rival}
-          </p>
-          {!partido.esLocal && (
-            <span className="flex items-center gap-0.5 text-[10px] text-orange-500 font-semibold">
-              <Bus size={10} /> VISITA
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* Fecha, hora y lugar */}
-      <div className="bg-gray-50 rounded-xl px-4 py-3 flex flex-col gap-1.5">
-        <div className="flex items-center gap-2 text-sm text-quarte-negro">
-          <Calendar size={14} className="text-quarte-azul flex-shrink-0" />
-          <span className="capitalize font-medium">{dia}</span>
-        </div>
-        <div className="flex items-center gap-2 text-sm text-gray-600">
-          <Clock size={14} className="text-quarte-azul flex-shrink-0" />
-          <span>{partido.hora} h</span>
-        </div>
-        <div className="flex items-center gap-2 text-sm text-gray-600">
-          <MapPin size={14} className="text-quarte-azul flex-shrink-0" />
-          <span className="leading-tight">{partido.lugar}</span>
-        </div>
-      </div>
-    </div>
-  );
+interface EntrenoResumen {
+  id:       string;
+  titulo:   string;
+  categoria: string;
 }
 
-// ── Subcomponente: empty state partido ──────────────────────
-function SinPartido() {
-  return (
-    <div className="flex flex-col items-center gap-3 py-5 text-center">
-      <div className="w-14 h-14 rounded-full bg-quarte-azulClaro flex items-center justify-center">
-        <Calendar size={26} className="text-quarte-azul" />
-      </div>
-      <div>
-        <p className="font-titulo font-semibold text-quarte-negro text-sm">
-          Temporada 2026-27 por comenzar
-        </p>
-        <p className="text-xs text-gray-400 mt-1 max-w-[220px] mx-auto leading-relaxed">
-          El calendario aparecerá aquí en cuanto la federación lo publique.
-        </p>
-      </div>
-    </div>
-  );
-}
-
-// ── Subcomponente: Tabla de clasificación ───────────────────
-function ClasificacionTable({ rows, equipo }: { rows: ClasificacionRow[]; equipo: string }) {
-  const visibles = rows.slice(0, 6);
-  return (
-    <div className="overflow-x-auto -mx-1">
-      <table className="w-full text-xs min-w-[280px]">
-        <thead>
-          <tr className="text-gray-400 font-titulo">
-            <th className="text-left py-1.5 pl-1 w-6">#</th>
-            <th className="text-left py-1.5">Equipo</th>
-            <th className="text-center py-1.5 w-7">PJ</th>
-            <th className="text-center py-1.5 w-7">GF</th>
-            <th className="text-center py-1.5 w-7">GC</th>
-            <th className="text-center py-1.5 w-8 font-bold text-quarte-azul">Pts</th>
-          </tr>
-        </thead>
-        <tbody>
-          {visibles.map(row => {
-            const somos = row.equipo.toLowerCase().includes('quarte') || row.esNuestroEquipo;
-            return (
-              <tr
-                key={row.posicion}
-                className={`border-t border-gray-100 transition-colors
-                             ${somos ? 'bg-quarte-azulClaro' : 'hover:bg-gray-50'}`}
-              >
-                <td className={`py-2 pl-1 font-titulo font-bold
-                                ${somos ? 'text-quarte-azul' : 'text-gray-400'}`}>
-                  {row.posicion}
-                </td>
-                <td className={`py-2 font-titulo font-semibold truncate max-w-[110px]
-                                ${somos ? 'text-quarte-azul' : 'text-quarte-negro'}`}>
-                  {row.equipo}
-                </td>
-                <td className="py-2 text-center text-gray-500">{row.pj}</td>
-                <td className="py-2 text-center text-gray-500">{row.gf}</td>
-                <td className="py-2 text-center text-gray-500">{row.gc}</td>
-                <td className={`py-2 text-center font-titulo font-bold
-                                ${somos ? 'text-quarte-azul' : 'text-quarte-negro'}`}>
-                  {row.pts}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-      {rows.length > 6 && (
-        <p className="text-[10px] text-gray-400 text-center mt-2">
-          {rows.length - 6} equipos más · clasificación completa próximamente
-        </p>
-      )}
-    </div>
-  );
-}
-
-// ── Subcomponente: empty state clasificación ─────────────────
-function SinClasificacion() {
-  return (
-    <div className="flex flex-col items-center gap-3 py-5 text-center">
-      <div className="w-14 h-14 rounded-full bg-amber-50 flex items-center justify-center">
-        <Trophy size={26} className="text-amber-500" />
-      </div>
-      <div>
-        <p className="font-titulo font-semibold text-quarte-negro text-sm">
-          Clasificación pendiente
-        </p>
-        <p className="text-xs text-gray-400 mt-1 max-w-[220px] mx-auto leading-relaxed">
-          Los datos se actualizarán cuando empiece la competición.
-        </p>
-      </div>
-    </div>
-  );
-}
-
-// ── Componente principal ─────────────────────────────────────
 export default function InicioPage() {
-  const { perfil } = usePerfilStore();
-  const navigate   = useNavigate();
+  const { perfil }      = usePerfilStore();
+  const asistenciaStore = useAsistenciaStore();
+  const navigate        = useNavigate();
 
-  const partido        = perfil ? getProximoPartido(perfil.equipo) : null;
-  const clasificacion  = perfil ? getClasificacion(perfil.equipo) : [];
+  const [misEntrenos, setMisEntrenos] = useState<EntrenoResumen[]>([]);
+  const [cargando,    setCargando]    = useState(false);
+
+  useEffect(() => {
+    if (!perfil) return;
+
+    // Carga los últimos 6 entrenamientos del coach
+    (async () => {
+      setCargando(true);
+      const { data } = await supabase
+        .from('trainings')
+        .select('id, nombre, categoria')
+        .eq('coach_id', perfil.id)
+        .order('created_at', { ascending: false })
+        .limit(6);
+
+      setMisEntrenos(
+        (data ?? []).map((r: Record<string, unknown>) => ({
+          id:        r.id       as string,
+          titulo:    (r.nombre  as string) ?? 'Entrenamiento',
+          categoria: (r.categoria as string) ?? 'otros',
+        }))
+      );
+      setCargando(false);
+    })();
+
+    // Carga resúmenes de asistencia para esos entrenamientos
+    asistenciaStore.cargarResumenEquipo(perfil.id);
+  }, [perfil?.id]);
 
   return (
     <div className="min-h-screen bg-quarte-gris">
 
-      {/* ── Hero header ──────────────────────────────────────── */}
-      <div className="bg-gradient-to-b from-quarte-azul to-blue-900
-                      px-4 pt-8 pb-16 relative overflow-hidden">
-        {/* Patrón decorativo sutil */}
+      {/* Hero header */}
+      <div className="bg-gradient-to-b from-quarte-azul to-blue-900 px-4 pt-8 pb-8 relative">
         <div className="absolute inset-0 opacity-[0.04]"
           style={{
             backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='1' fill-rule='evenodd'%3E%3Ccircle cx='20' cy='20' r='1'/%3E%3C/g%3E%3C/svg%3E")`,
@@ -224,7 +70,6 @@ export default function InicioPage() {
         />
 
         <div className="max-w-lg mx-auto relative">
-          {/* Saludo + avatar */}
           {perfil && (
             <button
               onClick={() => navigate('/perfil')}
@@ -241,20 +86,15 @@ export default function InicioPage() {
             </button>
           )}
 
-          {/* Escudo + nombre del club */}
           <div className="flex flex-col items-center text-center gap-3">
             <img
               src={escudoImg}
               alt="Escudo CD Atlético Quarte"
               className="w-20 h-20 object-contain drop-shadow-xl"
             />
-            <div>
-              <h1 className="font-titulo text-2xl font-extrabold tracking-tight text-white">
-                CD Atlético Quarte
-              </h1>
-              <p className="text-blue-200 text-xs mt-0.5">Cuarte de Huerva · Los Halcones</p>
-            </div>
-            {/* Badge del equipo del usuario */}
+            <h1 className="font-titulo text-2xl font-extrabold tracking-tight text-white">
+              CD Atlético Quarte
+            </h1>
             {perfil?.equipo && (
               <span className="bg-white/15 border border-white/20 text-white text-xs
                                font-titulo font-semibold px-3 py-1 rounded-full">
@@ -265,57 +105,89 @@ export default function InicioPage() {
         </div>
       </div>
 
-      {/* ── Contenido flotante sobre el hero ─────────────────── */}
-      <div className="max-w-lg mx-auto px-4 -mt-8 pb-8 flex flex-col gap-4">
-
-        {/* Card: Próximo Partido */}
-        <div className="card">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-titulo font-bold text-quarte-negro text-sm uppercase tracking-wide">
-              Próximo Partido
-            </h2>
-            <Calendar size={16} className="text-gray-300" />
-          </div>
-          {partido
-            ? <ProximoPartidoCard partido={partido} />
-            : <SinPartido />}
-        </div>
-
-        {/* Card: Clasificación */}
-        <div className="card">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-titulo font-bold text-quarte-negro text-sm uppercase tracking-wide">
-              Clasificación
-            </h2>
-            <Trophy size={16} className="text-gray-300" />
-          </div>
-          {clasificacion.length > 0
-            ? <ClasificacionTable rows={clasificacion} equipo={perfil?.equipo ?? ''} />
-            : <SinClasificacion />}
-        </div>
+      <div className="max-w-lg mx-auto px-4 mt-4 pb-8 flex flex-col gap-5">
 
         {/* Accesos rápidos */}
-        <div>
-          <p className="text-[10px] font-titulo font-bold text-gray-400 uppercase tracking-widest mb-3 px-1">
-            Acceso rápido
-          </p>
-          <div className="grid grid-cols-3 gap-3">
-            {SECCIONES.map(({ to, Icon, label, color }) => (
-              <button
-                key={to}
-                onClick={() => navigate(to)}
-                className="card flex flex-col items-center gap-2.5 py-4 px-2 text-center
-                           hover:shadow-md transition-shadow active:scale-[0.97]"
-              >
-                <div className={`${color} w-11 h-11 rounded-xl flex items-center justify-center shadow`}>
-                  <Icon size={22} className="text-white" />
-                </div>
-                <p className="font-titulo font-bold text-quarte-negro text-xs leading-tight">
-                  {label}
-                </p>
-              </button>
-            ))}
+        <div className="grid grid-cols-4 gap-2">
+          {SECCIONES.map(({ to, Icon, label, color }) => (
+            <button
+              key={to}
+              onClick={() => navigate(to)}
+              className="card flex flex-col items-center gap-2 py-3 px-1 text-center
+                         hover:shadow-md transition-shadow active:scale-[0.97]"
+            >
+              <div className={`${color} w-10 h-10 rounded-xl flex items-center justify-center shadow`}>
+                <Icon size={20} className="text-white" />
+              </div>
+              <p className="font-titulo font-bold text-quarte-negro text-[10px] leading-tight">
+                {label}
+              </p>
+            </button>
+          ))}
+        </div>
+
+        {/* Sección pase de lista */}
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <ClipboardList size={16} className="text-quarte-azul" />
+              <p className="font-titulo font-bold text-sm text-quarte-negro">Pase de lista</p>
+            </div>
+            <p className="text-xs text-gray-400">Mis entrenamientos</p>
           </div>
+
+          {cargando ? (
+            <div className="flex justify-center py-6">
+              <div className="w-6 h-6 border-2 border-quarte-azul border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : misEntrenos.length === 0 ? (
+            <div className="card flex flex-col items-center py-8 gap-2 text-gray-400">
+              <ClipboardList size={32} className="opacity-20" />
+              <p className="font-titulo font-semibold text-sm">Sin entrenamientos propios</p>
+              <p className="text-xs text-center">
+                Crea un entrenamiento en la Biblioteca para poder pasar lista.
+              </p>
+            </div>
+          ) : (
+            misEntrenos.map(entreno => {
+              const resumen = asistenciaStore.getResumen(entreno.id);
+              return (
+                <div key={entreno.id}
+                  className="card flex items-center gap-3">
+                  {/* Icono */}
+                  <div className="w-10 h-10 rounded-xl bg-quarte-azulClaro flex items-center justify-center flex-shrink-0">
+                    <Dumbbell size={18} className="text-quarte-azul" />
+                  </div>
+
+                  {/* Nombre */}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-titulo font-semibold text-sm text-quarte-negro truncate">
+                      {entreno.titulo}
+                    </p>
+                    {resumen ? (
+                      <p className="text-xs text-quarte-verde font-semibold">
+                        ✓ {resumen.presentes}/{resumen.total} jugadores presentes
+                      </p>
+                    ) : (
+                      <p className="text-xs text-gray-400">Lista no pasada</p>
+                    )}
+                  </div>
+
+                  {/* Botón */}
+                  <button
+                    onClick={() => navigate(`/entrenamientos/${entreno.id}/asistencia`)}
+                    className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl
+                      text-xs font-titulo font-semibold transition-colors
+                      ${resumen
+                        ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                        : 'bg-quarte-azul text-white hover:bg-blue-900'}`}>
+                    <ClipboardList size={13} />
+                    {resumen ? 'Ver lista' : 'Pasar lista'}
+                  </button>
+                </div>
+              );
+            })
+          )}
         </div>
 
       </div>

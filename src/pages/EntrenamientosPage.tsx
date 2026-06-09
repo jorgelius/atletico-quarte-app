@@ -3,11 +3,9 @@
 // Tabs: Biblioteca | Sugeridos | Favoritos | Mis ejercicios
 // ============================================================
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Dumbbell, Plus, Star, BookOpen, ThumbsUp, User } from 'lucide-react';
 import { usePerfilStore } from '@/stores/perfilStore';
 import { useEntrenamientosStore } from '@/stores/entrenamientosStore';
-import { useAsistenciaStore } from '@/stores/asistenciaStore';
 import EntrenamientoCard from '@/components/entrenamientos/EntrenamientoCard';
 import EntrenamientoDetalle from '@/components/entrenamientos/EntrenamientoDetalle';
 import EntrenamientoForm from '@/components/entrenamientos/EntrenamientoForm';
@@ -18,17 +16,13 @@ type Tab = 'biblioteca' | 'sugeridos' | 'favoritos' | 'mios';
 type View = { mode: 'list' } | { mode: 'detail'; id: string } | { mode: 'form'; item?: Entrenamiento };
 
 export default function EntrenamientosPage() {
-  const { perfil }      = usePerfilStore();
-  const store           = useEntrenamientosStore();
-  const asistenciaStore = useAsistenciaStore();
-  const navigate        = useNavigate();
+  const { perfil }  = usePerfilStore();
+  const store       = useEntrenamientosStore();
   const [tab,  setTab]  = useState<Tab>('biblioteca');
   const [view, setView] = useState<View>({ mode: 'list' });
 
   useEffect(() => {
-    if (!perfil) return;
-    store.cargar(perfil.id);
-    asistenciaStore.cargarResumenEquipo(perfil.id);
+    if (perfil) store.cargar(perfil.id);
   }, [perfil?.id]);
 
   if (!perfil) return null;
@@ -150,8 +144,6 @@ export default function EntrenamientosPage() {
                 isFav={store.isFav(item.id)}
                 onOpen={() => setView({ mode: 'detail', id: item.id })}
                 onToggleFav={() => store.toggleFav(perfil.id, item.id)}
-                resumenAsistencia={asistenciaStore.getResumen(item.id)}
-                onAsistencia={() => navigate(`/entrenamientos/${item.id}/asistencia`)}
               />
             ))
           )}
