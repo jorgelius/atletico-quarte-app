@@ -232,6 +232,21 @@ export interface MatchEvent {
   created_at:  string;
 }
 
+// --- CONVOCATORIA DE PARTIDO ---
+export type MatchSquadStatus = 'called' | 'confirmed' | 'declined' | 'doubt' | 'injured';
+
+export interface MatchSquad {
+  id:                string;
+  match_id:          string;
+  player_id:         string;
+  status:            MatchSquadStatus;
+  position_in_squad: number;
+  is_starter:        boolean;
+  jersey_number?:    number;
+  notes?:            string;
+  created_at:        string;
+}
+
 // --- ASISTENCIA A ENTRENAMIENTOS ---
 export type AttendanceStatus = 'present' | 'absent' | 'justified' | 'late';
 

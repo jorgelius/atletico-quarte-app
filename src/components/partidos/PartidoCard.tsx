@@ -1,4 +1,4 @@
-import { Calendar } from 'lucide-react';
+import { Calendar, Users } from 'lucide-react';
 import type { Match } from '@/types';
 
 export function getOutcome(m: Match): 'victoria' | 'empate' | 'derrota' | null {
@@ -14,11 +14,12 @@ export function formatFecha(d: string): string {
 }
 
 interface Props {
-  partido: Match;
-  onClick: () => void;
+  partido:        Match;
+  onClick:        () => void;
+  squadCount?:    number;   // undefined = no se ha cargado, 0 = sin convocatoria
 }
 
-export default function PartidoCard({ partido, onClick }: Props) {
+export default function PartidoCard({ partido, onClick, squadCount }: Props) {
   const outcome = getOutcome(partido);
 
   const borderColor =
@@ -50,10 +51,20 @@ export default function PartidoCard({ partido, onClick }: Props) {
             )}
           </div>
           <p className="font-titulo font-bold text-quarte-negro text-sm">vs {partido.rival_name}</p>
-          <div className="flex items-center gap-2 mt-0.5 text-xs text-gray-400">
-            <Calendar size={10} />
-            <span>{formatFecha(partido.date)}</span>
-            {partido.time && <span>· {partido.time}</span>}
+          <div className="flex items-center gap-2 mt-0.5 text-xs text-gray-400 flex-wrap">
+            <div className="flex items-center gap-1">
+              <Calendar size={10} />
+              <span>{formatFecha(partido.date)}</span>
+              {partido.time && <span>· {partido.time}</span>}
+            </div>
+            {/* Indicador de convocatoria */}
+            {squadCount !== undefined && (
+              <div className={`flex items-center gap-1 text-[10px] font-titulo font-semibold
+                ${squadCount > 0 ? 'text-quarte-verde' : 'text-gray-400'}`}>
+                <Users size={10} />
+                {squadCount > 0 ? `${squadCount} conv.` : 'Sin conv.'}
+              </div>
+            )}
           </div>
         </div>
 

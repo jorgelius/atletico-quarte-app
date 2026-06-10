@@ -4,14 +4,16 @@
 // Modal overlay: editor de resultado
 // ============================================================
 import { useEffect, useState, useRef } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Shield, Plus, ArrowLeft, Edit2, Trash2, X,
   Save, Trophy, AlertTriangle,
-  ChevronDown, Check,
+  ChevronDown, Check, ClipboardList, Users,
 } from 'lucide-react';
-import { usePerfilStore } from '@/stores/perfilStore';
+import { usePerfilStore }       from '@/stores/perfilStore';
 import { usePartidosStore, type EventoDraft } from '@/stores/partidosStore';
-import { usePlantillaStore } from '@/stores/plantillaStore';
+import { usePlantillaStore }    from '@/stores/plantillaStore';
+import { useConvocatoriaStore } from '@/stores/convocatoriaStore';
 import PartidoCard, { getOutcome, formatFecha } from '@/components/partidos/PartidoCard';
 import type { Match, MatchEventType, MatchLocation } from '@/types';
 
@@ -200,11 +202,9 @@ function ResultadoEditor({
   const [jugDropdown, setJugDropdown] = useState(false);
   const dropRef = useRef<HTMLDivElement>(null);
 
-  // Carga eventos existentes al abrir
   useEffect(() => {
     if (partido.status === 'played') {
       // Los eventos ya están en el store, no hace falta recargar aquí.
-      // Si hay que pre-poblar con eventos anteriores, se hace desde PartidosPage.
     }
   }, []);
 
@@ -416,6 +416,87 @@ function ResultadoEditor({
 }
 
 // ============================================================
+// SeccionConvocatoria — dentro del DetallePartido
+// ============================================================
+function SeccionConvocatoria({
+  matchId,
+  onAbrir,
+}: {
+  matchId: string;
+  onAbrir: () => void;
+}) {
+  const store = useConvocatoriaStore();
+  const squad = store.getSquad(matchId);
+  const loaded = matchId in store.squads;
+
+  useEffect(() => {
+    if (!loaded) store.cargar(matchId);
+  }, [matchId]);
+
+  const titulares = squad.filter(s => s.is_starter);
+  const total     = squad.length;
+
+  return (
+    <div className="card flex flex-col gap-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <ClipboardList size={16} className="text-quarte-azul" />
+          <p className="font-titulo font-bold text-sm text-quarte-negro">Convocatoria</p>
+        </div>
+        <button onClick={onAbrir}
+          className="flex items-center gap-1.5 text-xs font-titulo font-semibold text-quarte-azul hover:underline">
+          {total > 0 ? (
+            <>
+              <Edit2 size={12} /> Editar
+            </>
+          ) : (
+            <>
+              <Plus size={12} /> Crear
+            </>
+          )}
+        </button>
+      </div>
+
+      {store.cargando && !loaded ? (
+        <div className="flex justify-center py-2">
+          <div className="w-5 h-5 border-2 border-quarte-azul border-t-transparent rounded-full animate-spin" />
+        </div>
+      ) : total === 0 ? (
+        <button onClick={onAbrir}
+          className="flex items-center gap-3 py-3 rounded-xl border-2 border-dashed border-gray-200
+                     hover:border-quarte-azul hover:bg-quarte-azulClaro transition-colors">
+          <div className="w-10 h-10 rounded-xl bg-quarte-azulClaro flex items-center justify-center ml-2">
+            <Users size={20} className="text-quarte-azul" />
+          </div>
+          <div className="text-left">
+            <p className="font-titulo font-semibold text-sm text-quarte-azul">Crear convocatoria</p>
+            <p className="text-xs text-gray-400">Selecciona los jugadores para este partido</p>
+          </div>
+        </button>
+      ) : (
+        <>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="bg-quarte-azul text-white text-xs font-titulo font-bold
+                             px-2.5 py-1 rounded-full">
+              {titulares.length} titulares
+            </span>
+            <span className="bg-gray-100 text-gray-600 text-xs font-titulo font-semibold
+                             px-2.5 py-1 rounded-full">
+              {total - titulares.length} suplentes
+            </span>
+            <span className="text-xs text-gray-400 font-titulo ml-1">{total} convocados total</span>
+          </div>
+          <button onClick={onAbrir}
+            className="btn-secundario flex items-center justify-center gap-2 w-full text-sm py-2.5">
+            <Edit2 size={14} /> Ver y editar convocatoria
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ============================================================
 // DetallePartido — vista de detalle
 // ============================================================
 function DetallePartido({
@@ -425,6 +506,7 @@ function DetallePartido({
   onBack,
   onEditar,
   onGuardarResultado,
+  onAbrirConvocatoria,
 }: {
   partido:  Match;
   eventos:  import('@/types').MatchEvent[];
@@ -432,6 +514,7 @@ function DetallePartido({
   onBack:   () => void;
   onEditar: () => void;
   onGuardarResultado: (gf: number, gc: number, evs: EventoDraft[]) => Promise<void>;
+  onAbrirConvocatoria: () => void;
 }) {
   const [showResultEditor, setShowResultEditor] = useState(false);
   const [showConfirmCancel, setShowConfirmCancel] = useState(false);
@@ -510,6 +593,12 @@ function DetallePartido({
             <Trophy size={18} /> Registrar resultado
           </button>
         )}
+
+        {/* Sección Convocatoria */}
+        <SeccionConvocatoria
+          matchId={partido.id}
+          onAbrir={onAbrirConvocatoria}
+        />
 
         {/* Eventos del partido */}
         {partido.status === 'played' && (
@@ -628,15 +717,36 @@ export default function PartidosPage() {
   const { perfil }    = usePerfilStore();
   const store         = usePartidosStore();
   const plantillaStore = usePlantillaStore();
+  const navigate      = useNavigate();
+  const location      = useLocation();
 
   const [view, setView]   = useState<View>({ mode: 'list' });
   const [tab,  setTab]    = useState<TabFiltro>('todos');
+
+  const convocatoriaStore = useConvocatoriaStore();
 
   useEffect(() => {
     if (!perfil) return;
     store.cargar(perfil.id);
     plantillaStore.cargar(perfil.id);
   }, [perfil?.id]);
+
+  // Cargar counts de convocatoria cuando hay partidos cargados
+  useEffect(() => {
+    if (store.partidos.length === 0) return;
+    const ids = store.partidos.map(p => p.id);
+    convocatoriaStore.cargarCuentas(ids);
+  }, [store.partidos.length]);
+
+  // Abrir directamente a un detalle si se viene de ConvocatoriaPage
+  useEffect(() => {
+    const openId = (location.state as { openId?: string } | null)?.openId;
+    if (openId) {
+      setView({ mode: 'detalle', id: openId });
+      // Limpiar el state para no repetir
+      window.history.replaceState({}, '');
+    }
+  }, [location.state]);
 
   if (!perfil) return null;
 
@@ -693,6 +803,7 @@ export default function PartidosPage() {
         onGuardarResultado={async (gf, gc, evs) => {
           await store.guardarResultado(partido.id, gf, gc, evs);
         }}
+        onAbrirConvocatoria={() => navigate(`/partidos/${partido.id}/convocatoria`)}
       />
     );
   }
@@ -757,7 +868,12 @@ export default function PartidosPage() {
             </div>
           ) : (
             filtrados.map(p => (
-              <PartidoCard key={p.id} partido={p} onClick={() => irADetalle(p.id)} />
+              <PartidoCard
+                key={p.id}
+                partido={p}
+                onClick={() => irADetalle(p.id)}
+                squadCount={convocatoriaStore.getCount(p.id)}
+              />
             ))
           )}
         </div>
