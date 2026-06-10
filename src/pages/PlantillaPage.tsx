@@ -12,8 +12,10 @@ import { getFormaciones, getNumBanquillo, getNumTitulares } from '@/components/p
 import FieldCanvas from '@/components/plantilla/FieldCanvas';
 import GestorJugadores from '@/components/plantilla/GestorJugadores';
 import JugadorModal from '@/components/plantilla/JugadorModal';
+import RankingEquipo from '@/components/plantilla/RankingEquipo';
 
-type Tab = 'alineacion' | 'jugadores' | 'asistencia';
+type Tab = 'alineacion' | 'jugadores' | 'asistencia' | 'estadisticas';
+type SubTabRanking = 'goleadores' | 'asistencias' | 'asistencia';
 
 const COLORES_BANQ: Record<string, string> = {
   POR: 'border-amber-400 bg-amber-50',
@@ -27,7 +29,8 @@ export default function PlantillaPage() {
   const store            = usePlantillaStore();
   const asistenciaStore  = useAsistenciaStore();
   const stageRef         = useRef<Konva.Stage | null>(null);
-  const [tab, setTab]           = useState<Tab>('alineacion');
+  const [tab, setTab]                     = useState<Tab>('alineacion');
+  const [subTabRanking, setSubTabRanking] = useState<SubTabRanking>('goleadores');
   const [modalSlot, setModal]   = useState<number | null>(null);
   const [showGuardar, setShowG] = useState(false);
   const [nombreAlin, setNombreA] = useState('');
@@ -92,9 +95,10 @@ export default function PlantillaPage() {
       {/* Tabs */}
       <div className="flex bg-quarte-azul border-t border-blue-800">
         {([
-          { id: 'alineacion', label: '⚽ Alineación' },
-          { id: 'jugadores',  label: '👥 Jugadores'  },
-          { id: 'asistencia', label: '📋 Asistencia' },
+          { id: 'alineacion',   label: '⚽ Alineación' },
+          { id: 'jugadores',    label: '👥 Jugadores'  },
+          { id: 'asistencia',   label: '📋 Asistencia' },
+          { id: 'estadisticas', label: '🏆 Ranking'    },
         ] as { id: Tab; label: string }[]).map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
             className={`flex-1 py-2.5 text-xs font-titulo font-semibold transition-colors
@@ -330,6 +334,16 @@ export default function PlantillaPage() {
                 })}
               </div>
             )}
+          </div>
+        )}
+
+        {/* ── TAB ESTADÍSTICAS / RANKING ── */}
+        {tab === 'estadisticas' && (
+          <div className="p-4 max-w-lg mx-auto">
+            <RankingEquipo
+              subTab={subTabRanking}
+              onSubTab={setSubTabRanking}
+            />
           </div>
         )}
       </div>
