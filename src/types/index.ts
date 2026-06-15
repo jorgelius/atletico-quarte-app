@@ -75,6 +75,7 @@ export interface ElementoPizarra {
 export interface KeyframePizarra {
   id: string;
   elementos: ElementoPizarra[];
+  trazos?: TrazoCanvas[];  // freehand paths per keyframe
   duracion_ms: number;     // duración de la transición al siguiente frame
 }
 
