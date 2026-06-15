@@ -22,8 +22,12 @@ export default function LoginPage() {
     if (!email.trim() || !password) return;
     setCargando(true);
     setError('');
+    // Atajo: "admin" sin @ → cuenta de administración del club
+    const emailFinal = email.trim().toLowerCase() === 'admin'
+      ? 'admin@atleticoquarte.local'
+      : email.trim();
     try {
-      await login(email.trim(), password);
+      await login(emailFinal, password);
       navigate('/inicio', { replace: true });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Error al iniciar sesión';
@@ -69,16 +73,17 @@ export default function LoginPage() {
           {/* Email */}
           <div className="flex flex-col gap-1.5">
             <label htmlFor="email-login" className="font-titulo font-semibold text-sm text-quarte-negro">
-              Email
+              Email o usuario
             </label>
             <div className="relative">
               <Mail size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
                 id="email-login"
-                type="email"
+                type="text"
+                inputMode="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                placeholder="entrenador@atleticoquarte.es"
+                placeholder="tu@email.com"
                 autoComplete="email"
                 required
                 className="w-full min-h-[48px] pl-10 pr-4 py-3 rounded-xl border-2 border-gray-200

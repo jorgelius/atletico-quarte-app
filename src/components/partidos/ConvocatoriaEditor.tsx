@@ -220,9 +220,10 @@ export default function ConvocatoriaEditor({
   equipo, guardando, onGuardar, onBack,
 }: Props) {
   const { maxConvocados, numTitulares } = detectarLimites(equipo);
+  const jugadoresIds = new Set(jugadores.map(j => j.id));
   const [squad, setSquad] = useState<MatchSquad[]>(() =>
     initialSquad.length > 0
-      ? initialSquad
+      ? initialSquad.filter(s => jugadoresIds.has(s.player_id))
       : []
   );
   const [panel, setPanel] = useState<'disponibles' | 'convocados'>('disponibles');

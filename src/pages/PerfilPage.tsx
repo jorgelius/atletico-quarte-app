@@ -10,6 +10,7 @@ import { usePerfilStore } from '@/stores/perfilStore';
 import { PerfilForm } from '@/components/ui/PerfilForm';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
+import { getEquipoNombre } from '@/data/equipos';
 import type { Profile } from '@/types';
 
 const LABEL_ROL: Record<string, string> = {
@@ -91,7 +92,9 @@ export default function PerfilPage() {
             <p className="font-titulo font-bold text-quarte-negro text-lg truncate">
               {perfil.nombre}
             </p>
-            <p className="text-gray-600 text-sm truncate">{perfil.equipo}</p>
+            <p className="text-gray-600 text-sm truncate">
+              {(perfil.team_ids ?? []).map(id => getEquipoNombre(id)).join(' · ') || perfil.equipo}
+            </p>
             <Badge variante="azul" className="mt-1.5">
               {LABEL_ROL[perfil.rol] ?? perfil.rol}
             </Badge>

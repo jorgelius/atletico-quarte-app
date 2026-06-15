@@ -19,13 +19,19 @@ export const useTacticasStore = create<TacticasState>((set, get) => ({
   favoritos: [],
   cargando:  false,
 
-  cargar: async (userId) => {
+  cargar: async (teamId) => {
     set({ cargando: true });
-    const [items, favs] = await Promise.all([
-      dataProvider.getTacticas(),
-      dataProvider.getFavoritos(userId),
+    // Load tactics: team-specific + global suggested
+    const [teamItems, sugeridos, favs] = await Promise.all([
+      dataProvider.getTacticas({ author_id: teamId }),
+      dataProvider.getTacticas({ solo_sugeridos: true }),
+      dataProvider.getFavoritos(teamId),
     ]);
-    set({ items, favoritos: favs.filter(f => f.tipo === 'tactica'), cargando: false });
+    // Merge deduplicating by id (team items take precedence)
+    const map = new Map<string, (typeof teamItems)[0]>();
+    sugeridos.forEach(t => map.set(t.id, t));
+    teamItems.forEach(t => map.set(t.id, t));
+    set({ items: [...map.values()], favoritos: favs.filter(f => f.tipo === 'tactica'), cargando: false });
   },
 
   guardar: async (t) => {

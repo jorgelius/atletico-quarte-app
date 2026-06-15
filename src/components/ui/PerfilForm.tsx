@@ -93,6 +93,7 @@ export function PerfilForm({
       await onGuardar({
         nombre:     nombre.trim(),
         equipo:     equipo.trim(),
+        team_ids:   perfilInicial.team_ids ?? [],
         rol,
         avatar_b64: foto,
       });

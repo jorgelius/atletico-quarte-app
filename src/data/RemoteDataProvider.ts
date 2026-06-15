@@ -23,13 +23,22 @@ function check(error: { message: string } | null, op: string) {
 
 // ── Conversores DB ↔ App ─────────────────────────────────────
 
-// profiles: DB usa avatar_url / created_at / equipo (añadida)
-// App usa: avatar_b64 / creado_en / equipo
+// profiles: DB usa avatar_url / created_at / equipo
+// equipo almacena un JSON array de team UUIDs: '["uuid1","uuid2"]'
+// Si es legacy (string plano), se trata como un único equipo.
 function dbToProfile(r: Record<string, unknown>): Profile {
+  const raw = (r.equipo as string) ?? '';
+  let team_ids: string[] = [];
+  if (raw.startsWith('[')) {
+    try { team_ids = JSON.parse(raw) as string[]; } catch { team_ids = raw ? [raw] : []; }
+  } else if (raw) {
+    team_ids = [raw];
+  }
   return {
     id:         r.id as string,
     nombre:     (r.nombre as string) ?? '',
-    equipo:     (r.equipo as string) ?? '',
+    equipo:     team_ids[0] ?? '',
+    team_ids,
     rol:        (r.rol as Rol) ?? 'entrenador',
     avatar_b64: (r.avatar_url as string | undefined) || undefined,
     creado_en:  r.created_at
@@ -41,7 +50,7 @@ function profileToDb(p: Profile) {
   return {
     id:         p.id,
     nombre:     p.nombre,
-    equipo:     p.equipo,
+    equipo:     JSON.stringify(p.team_ids),
     rol:        p.rol,
     avatar_url: p.avatar_b64 ?? null,
   };

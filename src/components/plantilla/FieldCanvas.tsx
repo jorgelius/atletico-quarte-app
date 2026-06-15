@@ -249,7 +249,7 @@ export default function FieldCanvas({
                       width={tokenR}
                     />
                     <Text
-                      text={jugador.nombre.split(' ')[0].substring(0, 7)}
+                      text={(jugador.apellidos || jugador.nombre).split(' ')[0].substring(0, 7)}
                       fontSize={tokenR * 0.42}
                       fontFamily="Inter,sans-serif"
                       fill="white"

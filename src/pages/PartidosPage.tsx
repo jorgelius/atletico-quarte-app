@@ -16,6 +16,7 @@ import { usePlantillaStore }    from '@/stores/plantillaStore';
 import { useConvocatoriaStore } from '@/stores/convocatoriaStore';
 import PartidoCard, { getOutcome, formatFecha } from '@/components/partidos/PartidoCard';
 import type { Match, MatchEventType, MatchLocation } from '@/types';
+import { TeamSwitcher } from '@/components/ui/TeamSwitcher';
 
 // ── Tipos de vistas ──────────────────────────────────────────
 type View =
@@ -714,7 +715,7 @@ function DetallePartido({
 // PartidosPage — Componente principal
 // ============================================================
 export default function PartidosPage() {
-  const { perfil }    = usePerfilStore();
+  const { perfil, activeTeamId } = usePerfilStore();
   const store         = usePartidosStore();
   const plantillaStore = usePlantillaStore();
   const navigate      = useNavigate();
@@ -726,10 +727,10 @@ export default function PartidosPage() {
   const convocatoriaStore = useConvocatoriaStore();
 
   useEffect(() => {
-    if (!perfil) return;
-    store.cargar(perfil.id);
-    plantillaStore.cargar(perfil.id);
-  }, [perfil?.id]);
+    if (!perfil || !activeTeamId) return;
+    store.cargar(activeTeamId);
+    plantillaStore.cargar(activeTeamId);
+  }, [activeTeamId]);
 
   // Cargar counts de convocatoria cuando hay partidos cargados
   useEffect(() => {
@@ -778,7 +779,7 @@ export default function PartidosPage() {
     return (
       <PartidoForm
         inicial={inicial}
-        teamId={perfil.id}
+        teamId={activeTeamId ?? ''}
         onGuardar={async p => {
           await store.guardarPartido(p);
           setView({ mode: 'list' });
@@ -826,7 +827,10 @@ export default function PartidosPage() {
           </div>
           <div className="flex-1">
             <h1 className="font-titulo text-lg font-bold">Partidos</h1>
-            <p className="text-blue-200 text-xs">{store.partidos.length} partidos · {perfil.equipo}</p>
+            <div className="flex items-center gap-2 flex-wrap mt-0.5">
+              <TeamSwitcher />
+              <span className="text-blue-200 text-xs">{store.partidos.length} partidos</span>
+            </div>
           </div>
           <button onClick={() => setView({ mode: 'form' })}
             className="w-9 h-9 flex items-center justify-center rounded-xl bg-white/20 hover:bg-white/30">

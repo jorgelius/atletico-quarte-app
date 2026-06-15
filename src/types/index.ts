@@ -8,10 +8,15 @@ export type Rol = 'entrenador' | 'coordinador' | 'admin';
 export interface Profile {
   id: string;
   nombre: string;
-  equipo: string;          // Ej. "Alevín A", "Infantil B"
+  // team_ids: UUIDs fijos de los equipos que gestiona este entrenador.
+  // Se codifica en la columna 'equipo' de Supabase como JSON array string.
+  team_ids: string[];
   rol: Rol;
   avatar_b64?: string;     // Foto en base64 (opcional)
   creado_en: number;       // timestamp
+  // Campo legacy — ya no se usa directamente; se mantiene por compatibilidad
+  // con partes de la UI que aún leen perfil.equipo como string de display.
+  equipo: string;
 }
 
 // --- JUGADOR ---

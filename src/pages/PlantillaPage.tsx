@@ -9,13 +9,13 @@ import { usePerfilStore } from '@/stores/perfilStore';
 import { usePlantillaStore } from '@/stores/plantillaStore';
 import { useAsistenciaStore } from '@/stores/asistenciaStore';
 import { getFormaciones, getNumBanquillo, getNumTitulares } from '@/components/plantilla/formaciones';
+import { getFormatoEquipo } from '@/data/equipos';
+import { TeamSwitcher } from '@/components/ui/TeamSwitcher';
 import FieldCanvas from '@/components/plantilla/FieldCanvas';
 import GestorJugadores from '@/components/plantilla/GestorJugadores';
 import JugadorModal from '@/components/plantilla/JugadorModal';
-import RankingEquipo from '@/components/plantilla/RankingEquipo';
 
-type Tab = 'alineacion' | 'jugadores' | 'asistencia' | 'estadisticas';
-type SubTabRanking = 'goleadores' | 'asistencias' | 'asistencia';
+type Tab = 'alineacion' | 'jugadores' | 'asistencia';
 
 const COLORES_BANQ: Record<string, string> = {
   POR: 'border-amber-400 bg-amber-50',
@@ -29,19 +29,22 @@ export default function PlantillaPage() {
   const store            = usePlantillaStore();
   const asistenciaStore  = useAsistenciaStore();
   const stageRef         = useRef<Konva.Stage | null>(null);
-  const [tab, setTab]                     = useState<Tab>('alineacion');
-  const [subTabRanking, setSubTabRanking] = useState<SubTabRanking>('goleadores');
+  const [tab, setTab] = useState<Tab>('alineacion');
   const [modalSlot, setModal]   = useState<number | null>(null);
   const [showGuardar, setShowG] = useState(false);
   const [nombreAlin, setNombreA] = useState('');
   const [showCargar, setShowC]  = useState(false);
   const [showFmt, setShowFmt]   = useState(false);
 
+  const { activeTeamId } = usePerfilStore();
+
   useEffect(() => {
-    if (!perfil) return;
-    store.cargar(perfil.id);
-    asistenciaStore.cargarResumenEquipo(perfil.id);
-  }, [perfil?.id]);
+    if (!perfil || !activeTeamId) return;
+    store.cargar(activeTeamId);
+    store.cambiarFormato(getFormatoEquipo(activeTeamId));
+    asistenciaStore.cargarResumenEquipo(perfil.id);  // entrenos = biblioteca personal
+    asistenciaStore.cargarEstadisticasLista(activeTeamId);
+  }, [activeTeamId]);
 
   if (!perfil) return null;
 
@@ -67,8 +70,8 @@ export default function PlantillaPage() {
 
   // ── Guardar alineación ──
   async function handleGuardar() {
-    if (!nombreAlin.trim()) return;
-    await store.guardarAlineacion(perfil!.id, nombreAlin.trim());
+    if (!nombreAlin.trim() || !activeTeamId) return;
+    await store.guardarAlineacion(activeTeamId, nombreAlin.trim());
     setShowG(false);
     setNombreA('');
   }
@@ -82,7 +85,10 @@ export default function PlantillaPage() {
         </div>
         <div className="flex-1">
           <h1 className="font-titulo text-lg font-bold leading-tight">Plantilla</h1>
-          <p className="text-blue-200 text-xs">{perfil.equipo} · {store.formato} · {store.formacion}</p>
+          <div className="flex items-center gap-2 flex-wrap mt-0.5">
+            <TeamSwitcher />
+            <span className="text-blue-200 text-xs">· {store.formato} · {store.formacion}</span>
+          </div>
         </div>
         {/* Exportar PNG */}
         <button onClick={exportarPNG}
@@ -95,10 +101,9 @@ export default function PlantillaPage() {
       {/* Tabs */}
       <div className="flex bg-quarte-azul border-t border-blue-800">
         {([
-          { id: 'alineacion',   label: '⚽ Alineación' },
-          { id: 'jugadores',    label: '👥 Jugadores'  },
-          { id: 'asistencia',   label: '📋 Asistencia' },
-          { id: 'estadisticas', label: '🏆 Ranking'    },
+          { id: 'alineacion', label: '⚽ Alineación' },
+          { id: 'jugadores',  label: '👥 Jugadores'  },
+          { id: 'asistencia', label: '📋 Asistencia' },
         ] as { id: Tab; label: string }[]).map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
             className={`flex-1 py-2.5 text-xs font-titulo font-semibold transition-colors
@@ -115,18 +120,9 @@ export default function PlantillaPage() {
 
             {/* Controles: formato + formación */}
             <div className="flex gap-2">
-              {/* Formato F7/F11 */}
-              <div className="flex bg-white rounded-xl shadow-sm overflow-hidden flex-shrink-0">
-                {(['F7', 'F11'] as const).map(f => (
-                  <button key={f} onClick={() => store.cambiarFormato(f)}
-                    className={`px-4 py-2.5 text-sm font-titulo font-bold transition-colors
-                      ${store.formato === f
-                        ? 'bg-quarte-azul text-white'
-                        : 'text-gray-500 hover:bg-gray-50'
-                      }`}>
-                    {f}
-                  </button>
-                ))}
+              {/* Formato (fijo según categoría) */}
+              <div className="flex items-center px-4 py-2.5 bg-quarte-azul text-white rounded-xl shadow-sm flex-shrink-0">
+                <span className="text-sm font-titulo font-bold">{store.formato}</span>
               </div>
 
               {/* Selector de formación */}
@@ -196,7 +192,7 @@ export default function PlantillaPage() {
                       {jug ? (
                         <>
                           <span className="font-titulo font-bold text-lg leading-none">{jug.dorsal}</span>
-                          <span className="text-[9px] font-cuerpo truncate px-1">{jug.nombre.split(' ')[0]}</span>
+                          <span className="text-[9px] font-cuerpo truncate px-1">{(jug.apellidos || jug.nombre).split(' ')[0]}</span>
                         </>
                       ) : (
                         <span className="text-gray-300 text-xs">{slot.slotIdx - numTit + 1}</span>
@@ -283,16 +279,16 @@ export default function PlantillaPage() {
                 <ClipboardList size={16} className="text-quarte-azul" />
                 <p className="font-titulo font-bold text-sm text-quarte-negro">Asistencia temporada</p>
               </div>
-              {asistenciaStore.cargandoResumen && (
+              {asistenciaStore.cargandoLista && (
                 <div className="w-4 h-4 border-2 border-quarte-azul border-t-transparent rounded-full animate-spin" />
               )}
             </div>
 
-            {asistenciaStore.estadisticasEquipo.length === 0 && !asistenciaStore.cargandoResumen ? (
+            {asistenciaStore.estadisticasLista.length === 0 && !asistenciaStore.cargandoLista ? (
               <div className="flex flex-col items-center py-12 text-gray-400 gap-3">
                 <ClipboardList size={40} className="opacity-20" />
                 <p className="font-titulo font-semibold text-sm">Sin datos de asistencia</p>
-                <p className="text-xs text-center">Pasa lista en los entrenamientos para ver estadísticas aquí.</p>
+                <p className="text-xs text-center">Pasa lista desde Inicio para ver las estadísticas aquí.</p>
               </div>
             ) : (
               <div className="card p-0 overflow-hidden">
@@ -303,7 +299,7 @@ export default function PlantillaPage() {
                   <span className="w-8  text-right text-xs font-titulo font-bold text-quarte-azul">Total</span>
                   <span className="w-10 text-right text-xs font-titulo font-bold text-quarte-azul">%</span>
                 </div>
-                {asistenciaStore.estadisticasEquipo.map((stat, idx) => {
+                {asistenciaStore.estadisticasLista.map((stat, idx) => {
                   const pct = stat.total > 0 ? Math.round((stat.asistidos / stat.total) * 100) : 0;
                   const barColor = pct >= 80 ? 'bg-quarte-verde' : pct >= 60 ? 'bg-amber-400' : 'bg-quarte-rojo';
                   const textColor = pct >= 80 ? 'text-green-700' : pct >= 60 ? 'text-amber-600' : 'text-quarte-rojo';
@@ -314,7 +310,6 @@ export default function PlantillaPage() {
                         <p className="font-titulo font-semibold text-sm text-quarte-negro truncate">
                           {stat.player_name}
                         </p>
-                        {/* Barra visual */}
                         <div className="h-1.5 bg-gray-200 rounded-full mt-1 overflow-hidden w-full">
                           <div
                             className={`h-full rounded-full transition-all ${barColor}`}
@@ -337,15 +332,7 @@ export default function PlantillaPage() {
           </div>
         )}
 
-        {/* ── TAB ESTADÍSTICAS / RANKING ── */}
-        {tab === 'estadisticas' && (
-          <div className="p-4 max-w-lg mx-auto">
-            <RankingEquipo
-              subTab={subTabRanking}
-              onSubTab={setSubTabRanking}
-            />
-          </div>
-        )}
+
       </div>
 
       {/* Modal de anotaciones */}

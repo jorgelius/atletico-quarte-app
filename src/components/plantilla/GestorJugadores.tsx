@@ -142,7 +142,7 @@ export default function GestorJugadores({ jugadores, ownerId, onAgregar, onEdita
                 <div className="flex items-center gap-3 bg-white rounded-xl px-3 py-2.5 shadow-sm">
                   <Avatar nombre={j.nombre} foto={j.foto_b64} size="sm" />
                   <div className="flex-1 min-w-0">
-                    <p className="font-titulo font-semibold text-sm text-quarte-negro truncate">{j.nombre}</p>
+                    <p className="font-titulo font-semibold text-sm text-quarte-negro truncate">{j.nombre} {j.apellidos}</p>
                     <p className="text-xs text-gray-400">#{j.dorsal}
                       {(() => {
                         const stat = estadisticasAsistencia?.find(e => e.player_id === j.id);

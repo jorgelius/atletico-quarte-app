@@ -6,6 +6,7 @@ import { PencilRuler, Plus, Trash2, Clock, Loader2 } from 'lucide-react';
 import { usePerfilStore } from '@/stores/perfilStore';
 import { usePlantillaStore } from '@/stores/plantillaStore';
 import { usePizarrasStore } from '@/stores/pizarrasTacticasStore';
+import { getFormatoEquipo } from '@/data/equipos';
 import TacticaEditor from '@/components/pizarra/TacticaEditor';
 import type { PizarraTactica, DatosPizarra } from '@/types';
 
@@ -18,7 +19,7 @@ function formatFecha(ts: number) {
 }
 
 export default function PizarraTacticaPage() {
-  const { perfil }   = usePerfilStore();
+  const { perfil, activeTeamId } = usePerfilStore();
   const plantilla    = usePlantillaStore();
   const store        = usePizarrasStore();
   const [editando, setEditando] = useState<PizarraTactica | null>(null);
@@ -27,20 +28,21 @@ export default function PizarraTacticaPage() {
   const editorRef = useRef(null);
 
   useEffect(() => {
-    if (!perfil) return;
-    store.cargar(perfil.id);
-    plantilla.cargar(perfil.id);
-  }, [perfil?.id]);
+    if (!perfil || !activeTeamId) return;
+    store.cargar(activeTeamId);
+    plantilla.cargar(activeTeamId);
+  }, [activeTeamId]);
 
   if (!perfil) return null;
+  const teamId = activeTeamId ?? '';
 
   // ── Crear nueva pizarra ──────────────────────────────────────
   function nuevaPizarra() {
     const p: PizarraTactica = {
       id:             crypto.randomUUID(),
-      coach_id:       perfil!.id,
+      coach_id:       teamId,
       titulo:         'Nueva pizarra',
-      formato:        'F11',
+      formato:        getFormatoEquipo(teamId),
       canvas_data:    DATOS_VACIOS,
       creado_en:      Date.now(),
       actualizado_en: Date.now(),
@@ -71,11 +73,12 @@ export default function PizarraTacticaPage() {
       <TacticaEditor
         ref={editorRef}
         pizarra={editando}
-        coachId={perfil.id}
+        coachId={teamId}
         jugadores={plantilla.jugadores}
         alineaciones={plantilla.alineacionesGuardadas}
         onSave={handleSave}
         onBack={() => setEditando(null)}
+        formatoForzado={getFormatoEquipo(teamId)}
       />
     );
   }

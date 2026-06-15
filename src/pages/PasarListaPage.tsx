@@ -1,13 +1,12 @@
 // ============================================================
 // PasarListaPage — Pase de lista independiente
 // Ruta: /pasar-lista
-// Sin relación con la biblioteca de entrenamientos.
-// Guarda automáticamente al marcar cada jugador.
 // ============================================================
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, CheckSquare, Users } from 'lucide-react';
+import { ArrowLeft, CheckSquare, Users, Trash2, Calendar, ChevronDown, ChevronUp, AlertCircle, X } from 'lucide-react';
 import { usePerfilStore } from '@/stores/perfilStore';
+import { TeamSwitcher } from '@/components/ui/TeamSwitcher';
 import { usePlantillaStore } from '@/stores/plantillaStore';
 import { supabase } from '@/data/supabaseClient';
 import type { Jugador, AttendanceStatus } from '@/types';
@@ -27,6 +26,27 @@ function hoy(): string {
   return new Date().toISOString().split('T')[0];
 }
 
+function formatFechaLarga(dateStr: string): string {
+  return new Date(dateStr + 'T12:00:00').toLocaleDateString('es-ES', {
+    weekday: 'long', day: 'numeric', month: 'long',
+  });
+}
+
+function formatFechaCorta(dateStr: string): string {
+  return new Date(dateStr + 'T12:00:00').toLocaleDateString('es-ES', {
+    weekday: 'short', day: 'numeric', month: 'short',
+  });
+}
+
+// ── Tipos historial ──────────────────────────────────────────
+interface SesionHistorial {
+  id:        string;
+  date:      string;
+  records:   Record<string, AttendanceStatus>;
+  presentes: number;
+  marcados:  number;
+}
+
 // ── Fila de jugador ──────────────────────────────────────────
 function JugadorFila({
   jugador,
@@ -41,7 +61,6 @@ function JugadorFila({
 
   return (
     <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-      {/* Info jugador */}
       <div className="flex items-center gap-3 px-3 py-2.5">
         <div className="w-10 h-10 rounded-full bg-quarte-azulClaro flex items-center justify-center flex-shrink-0 overflow-hidden">
           {jugador.foto_b64
@@ -62,7 +81,6 @@ function JugadorFila({
         )}
       </div>
 
-      {/* Botones de estado */}
       <div className="flex border-t border-gray-100">
         {ESTADOS.map(est => (
           <button key={est.status} onClick={() => onCambiar(est.status)}
@@ -76,40 +94,182 @@ function JugadorFila({
   );
 }
 
+// ── Tarjeta de historial ─────────────────────────────────────
+function SesionCard({
+  sesion,
+  jugadores,
+  onEliminar,
+}: {
+  sesion:     SesionHistorial;
+  jugadores:  Jugador[];
+  onEliminar: () => void;
+}) {
+  const [expandido, setExpandido] = useState(false);
+  const total = jugadores.length;
+  const pct = total > 0 ? Math.round((sesion.presentes / total) * 100) : 0;
+
+  const resumenEstados = ESTADOS.map(e => ({
+    ...e,
+    count: Object.values(sesion.records).filter(s => s === e.status).length,
+  })).filter(e => e.count > 0);
+
+  const filas = (Object.entries(sesion.records) as [string, AttendanceStatus][])
+    .map(([pid, s]) => {
+      const jug = jugadores.find(j => j.id === pid);
+      return { pid, s, nombre: jug ? `${jug.nombre} ${jug.apellidos}` : '—', dorsal: jug?.dorsal };
+    })
+    .sort((a, b) => (ORDEN[jugadores.find(j => j.id === a.pid)?.posicion ?? ''] ?? 4) - (ORDEN[jugadores.find(j => j.id === b.pid)?.posicion ?? ''] ?? 4));
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+      <div className="flex items-center gap-3 px-4 py-3">
+        <div className="w-9 h-9 rounded-xl bg-quarte-azulClaro flex items-center justify-center flex-shrink-0">
+          <Calendar size={16} className="text-quarte-azul" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-titulo font-semibold text-sm text-quarte-negro capitalize">
+            {formatFechaCorta(sesion.date)}
+          </p>
+          <p className="text-xs text-gray-400">
+            {sesion.presentes}/{total} presentes · {pct}%
+          </p>
+        </div>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => setExpandido(v => !v)}
+            className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-gray-100 transition-colors text-gray-400">
+            {expandido ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          </button>
+          <button
+            onClick={onEliminar}
+            className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-red-50 transition-colors text-red-400">
+            <Trash2 size={15} />
+          </button>
+        </div>
+      </div>
+
+      {resumenEstados.length > 0 && (
+        <div className="px-4 pb-2 flex gap-2 flex-wrap">
+          {resumenEstados.map(e => (
+            <span key={e.status} className={`text-xs font-titulo font-semibold px-2 py-0.5 rounded-full ${e.bg} ${e.text}`}>
+              {e.emoji} {e.count}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {expandido && filas.length > 0 && (
+        <div className="border-t border-gray-100 px-4 py-2 flex flex-col gap-1">
+          {filas.map(({ pid, s, nombre, dorsal }) => {
+            const cfg = ESTADOS.find(e => e.status === s);
+            return (
+              <div key={pid} className="flex items-center gap-2 py-0.5">
+                <span className="text-sm">{cfg?.emoji}</span>
+                {dorsal !== undefined && (
+                  <span className="text-[10px] font-titulo font-bold text-gray-400 w-5 text-center">#{dorsal}</span>
+                )}
+                <span className="text-xs font-titulo font-semibold text-quarte-negro">{nombre}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Modal de confirmación de borrado ──────────────────────────
+function ConfirmDeleteModal({ onConfirm, onCancel }: { onConfirm: () => void; onCancel: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 px-4 pb-6">
+      <div className="bg-white rounded-2xl w-full max-w-sm p-5 flex flex-col gap-4 shadow-xl">
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center flex-shrink-0">
+            <Trash2 size={18} className="text-red-500" />
+          </div>
+          <div>
+            <p className="font-titulo font-bold text-quarte-negro">¿Borrar este pase de lista?</p>
+            <p className="text-sm text-gray-500 mt-0.5">Esta acción no se puede deshacer.</p>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <button onClick={onCancel}
+            className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-titulo font-semibold text-gray-600 hover:bg-gray-50 transition-colors">
+            Cancelar
+          </button>
+          <button onClick={onConfirm}
+            className="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-sm font-titulo font-semibold hover:bg-red-600 transition-colors">
+            Borrar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ============================================================
 // PasarListaPage
 // ============================================================
 export default function PasarListaPage() {
-  const navigate       = useNavigate();
-  const { perfil }     = usePerfilStore();
-  const plantillaStore = usePlantillaStore();
+  const navigate                   = useNavigate();
+  const { perfil, activeTeamId }   = usePerfilStore();
+  const plantillaStore             = usePlantillaStore();
 
-  // records: { [player_id]: AttendanceStatus }
-  const [records,    setRecords]    = useState<Record<string, AttendanceStatus>>({});
-  const [sessionId,  setSessionId]  = useState<string | null>(null);
-  const [guardando,  setGuardando]  = useState(false);
+  const [records,         setRecords]         = useState<Record<string, AttendanceStatus>>({});
+  const [sessionId,       setSessionId]       = useState<string | null>(null);
+  const [guardando,       setGuardando]       = useState(false);
+  const [errorMsg,        setErrorMsg]        = useState<string | null>(null);
+  const [historial,       setHistorial]       = useState<SesionHistorial[]>([]);
+  const [cargandoHist,    setCargandoHist]    = useState(false);
+  const [confirmDelete,   setConfirmDelete]   = useState<string | null>(null);
+  const [mostrarHistorial, setMostrarHistorial] = useState(false);
 
   const fecha = hoy();
 
-  // Carga jugadores y sesión de hoy
+  // ── Carga inicial ────────────────────────────────────────
   useEffect(() => {
-    if (!perfil) return;
+    if (!perfil || !activeTeamId) return;
     if (plantillaStore.jugadores.length === 0) {
-      plantillaStore.cargar(perfil.id);
+      plantillaStore.cargar(activeTeamId);
     }
     (async () => {
+      // Sesión de hoy
       const { data } = await supabase
         .from('lista_sesiones')
         .select('id, records')
-        .eq('coach_id', perfil.id)
+        .eq('coach_id', activeTeamId)
         .eq('date', fecha)
         .maybeSingle();
       if (data) {
         setSessionId(data.id as string);
         setRecords((data.records as Record<string, AttendanceStatus>) ?? {});
       }
+      // Historial (sin hoy)
+      cargarHistorial(activeTeamId);
     })();
-  }, [perfil?.id]);
+  }, [activeTeamId]);
+
+  async function cargarHistorial(teamId: string) {
+    setCargandoHist(true);
+    const { data } = await supabase
+      .from('lista_sesiones')
+      .select('id, date, records')
+      .eq('coach_id', teamId)
+      .neq('date', fecha)
+      .order('date', { ascending: false })
+      .limit(30);
+    if (data) {
+      const sesiones: SesionHistorial[] = (data as { id: string; date: string; records: Record<string, AttendanceStatus> }[]).map(d => ({
+        id:        d.id,
+        date:      d.date,
+        records:   d.records ?? {},
+        presentes: Object.values(d.records ?? {}).filter(s => s === 'present' || s === 'late').length,
+        marcados:  Object.values(d.records ?? {}).length,
+      }));
+      setHistorial(sesiones);
+    }
+    setCargandoHist(false);
+  }
 
   if (!perfil) return null;
 
@@ -119,17 +279,19 @@ export default function PasarListaPage() {
   const presentes = Object.values(records).filter(s => s === 'present' || s === 'late').length;
   const total     = jugadores.length;
 
-  // Guarda (upsert) en Supabase
+  // ── Persistir en Supabase ──────────────────────────────
   async function persistir(newRecords: Record<string, AttendanceStatus>) {
-    if (!perfil) return;
+    if (!perfil || !activeTeamId) return;
     setGuardando(true);
+    setErrorMsg(null);
     const now = new Date().toISOString();
+    const upsertId = sessionId ?? crypto.randomUUID();
     const { data, error } = await supabase
       .from('lista_sesiones')
       .upsert(
         {
-          id:         sessionId ?? crypto.randomUUID(),
-          coach_id:   perfil.id,
+          id:         upsertId,
+          coach_id:   activeTeamId,
           date:       fecha,
           records:    newRecords,
           updated_at: now,
@@ -138,7 +300,11 @@ export default function PasarListaPage() {
       )
       .select('id')
       .maybeSingle();
-    if (!error && data && !sessionId) setSessionId((data as { id: string }).id);
+    if (error) {
+      setErrorMsg('No se pudo guardar. Comprueba la conexión.');
+    } else if (data && !sessionId) {
+      setSessionId((data as { id: string }).id);
+    }
     setGuardando(false);
   }
 
@@ -155,7 +321,26 @@ export default function PasarListaPage() {
     await persistir(next);
   }
 
-  // Grupos por posición
+  // ── Borrar sesión del historial ────────────────────────
+  async function eliminarSesion(id: string) {
+    const { error } = await supabase
+      .from('lista_sesiones')
+      .delete()
+      .eq('id', id);
+    if (!error) {
+      setHistorial(prev => prev.filter(s => s.id !== id));
+      // Si borraron la sesión de hoy
+      if (id === sessionId) {
+        setSessionId(null);
+        setRecords({});
+      }
+    } else {
+      setErrorMsg('No se pudo borrar. Intenta de nuevo.');
+    }
+    setConfirmDelete(null);
+  }
+
+  // ── Grupos por posición ────────────────────────────────
   const grupos = [
     { label: 'Porteros',       items: jugadores.filter(j => j.posicion === 'POR') },
     { label: 'Defensas',       items: jugadores.filter(j => j.posicion === 'DEF') },
@@ -163,9 +348,7 @@ export default function PasarListaPage() {
     { label: 'Delanteros',     items: jugadores.filter(j => j.posicion === 'DEL') },
   ].filter(g => g.items.length > 0);
 
-  const fechaDisplay = new Date(fecha + 'T12:00:00').toLocaleDateString('es-ES', {
-    weekday: 'long', day: 'numeric', month: 'long',
-  });
+  const fechaDisplay = formatFechaLarga(fecha);
 
   return (
     <div className="flex flex-col min-h-screen bg-quarte-gris">
@@ -178,10 +361,21 @@ export default function PasarListaPage() {
           </button>
           <div className="flex-1">
             <h1 className="font-titulo text-lg font-bold leading-tight">Pase de lista</h1>
-            <p className="text-blue-200 text-xs capitalize">{fechaDisplay}</p>
+            <div className="flex items-center gap-2 flex-wrap mt-0.5">
+              <span className="text-blue-200 text-xs capitalize">{fechaDisplay}</span>
+              <TeamSwitcher />
+            </div>
           </div>
           {guardando && (
             <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          )}
+          {sessionId && !guardando && (
+            <button
+              onClick={() => setConfirmDelete(sessionId)}
+              className="w-9 h-9 flex items-center justify-center rounded-xl bg-white/20 hover:bg-red-400/60 transition-colors"
+              title="Borrar lista de hoy">
+              <Trash2 size={18} />
+            </button>
           )}
         </div>
 
@@ -201,7 +395,18 @@ export default function PasarListaPage() {
         </div>
       </div>
 
-      {/* Lista */}
+      {/* Error banner */}
+      {errorMsg && (
+        <div className="mx-4 mt-3 bg-red-50 border border-red-200 rounded-2xl px-4 py-3 flex items-center gap-3">
+          <AlertCircle size={16} className="text-red-500 flex-shrink-0" />
+          <p className="text-sm text-red-700 font-cuerpo flex-1">{errorMsg}</p>
+          <button onClick={() => setErrorMsg(null)} className="text-red-400 hover:text-red-600">
+            <X size={16} />
+          </button>
+        </div>
+      )}
+
+      {/* Lista del día */}
       <div className="flex-1 overflow-y-auto p-4 max-w-lg mx-auto w-full flex flex-col gap-5">
         {plantillaStore.cargando ? (
           <div className="flex justify-center py-12">
@@ -230,7 +435,46 @@ export default function PasarListaPage() {
             </div>
           ))
         )}
+
+        {/* ── Historial ─────────────────────────────────── */}
+        {(historial.length > 0 || cargandoHist) && (
+          <div className="flex flex-col gap-2 pt-2 border-t border-gray-200">
+            <button
+              onClick={() => setMostrarHistorial(v => !v)}
+              className="flex items-center justify-between px-1 py-1">
+              <p className="font-titulo text-xs font-bold text-gray-400 uppercase tracking-wider">
+                Historial ({historial.length})
+              </p>
+              {mostrarHistorial ? <ChevronUp size={14} className="text-gray-400" /> : <ChevronDown size={14} className="text-gray-400" />}
+            </button>
+
+            {mostrarHistorial && (
+              cargandoHist ? (
+                <div className="flex justify-center py-4">
+                  <div className="w-6 h-6 border-2 border-quarte-azul border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : (
+                historial.map(sesion => (
+                  <SesionCard
+                    key={sesion.id}
+                    sesion={sesion}
+                    jugadores={jugadores}
+                    onEliminar={() => setConfirmDelete(sesion.id)}
+                  />
+                ))
+              )
+            )}
+          </div>
+        )}
       </div>
+
+      {/* Modal de confirmación de borrado */}
+      {confirmDelete && (
+        <ConfirmDeleteModal
+          onConfirm={() => eliminarSesion(confirmDelete)}
+          onCancel={() => setConfirmDelete(null)}
+        />
+      )}
     </div>
   );
 }

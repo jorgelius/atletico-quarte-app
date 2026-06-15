@@ -125,20 +125,21 @@ export interface TacticaEditorHandle {
 }
 
 interface TacticaEditorProps {
-  pizarra:     PizarraTactica;
-  coachId:     string;
-  jugadores:   Jugador[];
-  alineaciones: Alineacion[];
-  onSave:      (p: PizarraTactica) => Promise<void>;
-  onBack:      () => void;
+  pizarra:        PizarraTactica;
+  coachId:        string;
+  jugadores:      Jugador[];
+  alineaciones:   Alineacion[];
+  onSave:         (p: PizarraTactica) => Promise<void>;
+  onBack:         () => void;
+  formatoForzado?: FormatoPartido;
 }
 
 // ── COMPONENTE PRINCIPAL ──────────────────────────────────────
 const TacticaEditor = forwardRef<TacticaEditorHandle, TacticaEditorProps>(
-  ({ pizarra, coachId, jugadores, alineaciones, onSave, onBack }, ref) => {
+  ({ pizarra, coachId, jugadores, alineaciones, onSave, onBack, formatoForzado }, ref) => {
 
   const [titulo,   setTitulo]   = useState(pizarra.titulo);
-  const [formato,  setFormato]  = useState<FormatoPartido>(pizarra.formato);
+  const [formato,  setFormato]  = useState<FormatoPartido>(formatoForzado ?? pizarra.formato);
   const [datos,    setDatos]    = useState<DatosPizarra>(
     pizarra.canvas_data ?? { jugadores: [], trazos: [], flechas: [], zonas: [], textos: [] }
   );
@@ -465,15 +466,21 @@ const TacticaEditor = forwardRef<TacticaEditorHandle, TacticaEditorProps>(
           placeholder="Nombre de la pizarra…"
         />
         {/* F7/F11 */}
-        <div className="flex bg-gray-800 rounded-lg overflow-hidden flex-shrink-0">
-          {(['F7', 'F11'] as FormatoPartido[]).map(f => (
-            <button key={f} onClick={() => setFormato(f)}
-              className={`px-2.5 py-1.5 text-xs font-titulo font-bold transition-colors
-                ${formato === f ? 'bg-quarte-azul text-white' : 'text-gray-400 hover:text-white'}`}>
-              {f}
-            </button>
-          ))}
-        </div>
+        {formatoForzado ? (
+          <div className="flex items-center px-2.5 py-1.5 bg-quarte-azul text-white rounded-lg flex-shrink-0">
+            <span className="text-xs font-titulo font-bold">{formato}</span>
+          </div>
+        ) : (
+          <div className="flex bg-gray-800 rounded-lg overflow-hidden flex-shrink-0">
+            {(['F7', 'F11'] as FormatoPartido[]).map(f => (
+              <button key={f} onClick={() => setFormato(f)}
+                className={`px-2.5 py-1.5 text-xs font-titulo font-bold transition-colors
+                  ${formato === f ? 'bg-quarte-azul text-white' : 'text-gray-400 hover:text-white'}`}>
+                {f}
+              </button>
+            ))}
+          </div>
+        )}
         <button onClick={handleSave} disabled={saving}
           className="w-9 h-9 flex items-center justify-center rounded-xl bg-quarte-azul text-white hover:bg-blue-700 flex-shrink-0 disabled:opacity-60">
           {saving

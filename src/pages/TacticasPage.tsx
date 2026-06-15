@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { usePerfilStore } from '@/stores/perfilStore';
 import { useTacticasStore } from '@/stores/tacticasStore';
+import { getFormatoEquipo } from '@/data/equipos';
 import PitchBoard, { type PitchBoardHandle } from '@/components/pizarra/PitchBoard';
 import type { Tactica, TipoTactica, FormatoPartido } from '@/types';
 
@@ -29,13 +30,13 @@ function fileAB64(f: File): Promise<string> {
 }
 
 // ── Formulario de táctica ────────────────────────────────────
-function TacticaForm({ inicial, authorId, canSugerir, onGuardar, onCancelar }: {
-  inicial?: Tactica; authorId: string; canSugerir: boolean;
+function TacticaForm({ inicial, authorId, canSugerir, formatoForzado, onGuardar, onCancelar }: {
+  inicial?: Tactica; authorId: string; canSugerir: boolean; formatoForzado: FormatoPartido;
   onGuardar: (t: Tactica) => Promise<void>; onCancelar: () => void;
 }) {
   const [titulo,    setTitulo]   = useState(inicial?.titulo ?? '');
   const [tipo,      setTipo]     = useState<TipoTactica>(inicial?.tipo ?? 'sistema');
-  const [fmt,       setFmt]      = useState<FormatoPartido>(inicial?.formato ?? 'F11');
+  const [fmt] = useState<FormatoPartido>(inicial?.formato ?? formatoForzado);
   const [desc,      setDesc]     = useState(inicial?.descripcion ?? '');
   const [insts,     setInsts]    = useState<string[]>(inicial?.instrucciones ?? ['']);
   const [fotos,     setFotos]    = useState<string[]>(inicial?.fotos_b64 ?? []);
@@ -87,12 +88,8 @@ function TacticaForm({ inicial, authorId, canSugerir, onGuardar, onCancelar }: {
               </button>
             ))}
           </div>
-          <div className="flex bg-gray-100 rounded-xl overflow-hidden w-fit">
-            {(['F7','F11'] as FormatoPartido[]).map(f => (
-              <button key={f} type="button" onClick={() => setFmt(f)}
-                className={`px-4 py-2 text-sm font-titulo font-bold transition-colors
-                  ${fmt === f ? 'bg-quarte-verde text-white' : 'text-gray-500'}`}>{f}</button>
-            ))}
+          <div className="flex items-center px-4 py-2 bg-quarte-verde text-white rounded-xl w-fit">
+            <span className="text-sm font-titulo font-bold">{fmt}</span>
           </div>
         </div>
 
@@ -233,38 +230,40 @@ function TacticaDetalle({ item, isFav, canEdit, onBack, onToggleFav, onEdit, onB
 
 // ── Página principal ─────────────────────────────────────────
 export default function TacticasPage() {
-  const { perfil } = usePerfilStore();
+  const { perfil, activeTeamId } = usePerfilStore();
   const store      = useTacticasStore();
   const [tab,  setTab]  = useState<Tab>('todo');
   const [view, setView] = useState<View>({ mode: 'list' });
 
   useEffect(() => {
-    if (perfil) store.cargar(perfil.id);
-  }, [perfil?.id]);
+    if (activeTeamId) store.cargar(activeTeamId);
+  }, [activeTeamId]);
 
   if (!perfil) return null;
   const canSugerir = perfil.rol === 'admin' || perfil.rol === 'coordinador';
+  const teamId = activeTeamId ?? '';
+  const formatoEquipo = getFormatoEquipo(teamId);
 
   const filtered = (() => {
-    let base = store.items;
+    let base = store.items.filter(t => t.formato === formatoEquipo);
     if (tab === 'sugeridos') base = base.filter(t => t.es_sugerido);
     if (tab === 'favoritos') base = base.filter(t => store.isFav(t.id));
-    if (tab === 'mios')      base = base.filter(t => t.author_id === perfil.id);
+    if (tab === 'mios')      base = base.filter(t => t.author_id === teamId);
     return base.sort((a, b) => b.creado_en - a.creado_en);
   })();
 
   if (view.mode === 'detail') {
     const item = store.items.find(t => t.id === (view as { mode:'detail'; id:string }).id);
     if (!item) { setView({ mode: 'list' }); return null; }
-    return <TacticaDetalle item={item} isFav={store.isFav(item.id)} canEdit={item.author_id === perfil.id || canSugerir}
+    return <TacticaDetalle item={item} isFav={store.isFav(item.id)} canEdit={item.author_id === teamId || canSugerir}
       onBack={() => setView({ mode:'list' })} onToggleFav={() => store.toggleFav(perfil.id, item.id)}
       onEdit={() => setView({ mode:'form', item })}
-      onBorrar={async () => { await store.borrar(item.id, perfil.id); setView({ mode:'list' }); }} />;
+      onBorrar={async () => { await store.borrar(item.id, teamId); setView({ mode:'list' }); }} />;
   }
 
   if (view.mode === 'form') {
     const fi = (view as { mode:'form'; item?: Tactica }).item;
-    return <TacticaForm inicial={fi} authorId={perfil.id} canSugerir={canSugerir}
+    return <TacticaForm inicial={fi} authorId={teamId} canSugerir={canSugerir} formatoForzado={formatoEquipo}
       onGuardar={async t => { await store.guardar(t); setView({ mode:'list' }); }}
       onCancelar={() => setView({ mode:'list' })} />;
   }
@@ -329,7 +328,7 @@ export default function TacticasPage() {
                   </div>
                   <p className="font-titulo font-bold text-sm text-quarte-negro line-clamp-2">{item.titulo}</p>
                 </div>
-                <button onClick={e => { e.stopPropagation(); store.toggleFav(perfil.id, item.id); }}
+                <button onClick={e => { e.stopPropagation(); store.toggleFav(perfil!.id, item.id); }}
                   className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-yellow-50 flex-shrink-0">
                   <Star size={16} fill={store.isFav(item.id) ? '#F59E0B' : 'none'} stroke={store.isFav(item.id) ? '#F59E0B' : '#9CA3AF'} />
                 </button>

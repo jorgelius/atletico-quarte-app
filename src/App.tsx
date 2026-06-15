@@ -23,6 +23,8 @@ import EntrenamientosPage   from '@/pages/EntrenamientosPage';
 import TacticasPage         from '@/pages/TacticasPage';
 import PizarraTacticaPage  from '@/pages/PizarraTacticaPage';
 import PerfilPage           from '@/pages/PerfilPage';
+import EstadisticasPage     from '@/pages/EstadisticasPage';
+import ClasificacionPage    from '@/pages/ClasificacionPage';
 import PartidosPage         from '@/pages/PartidosPage';
 import ConvocatoriaPage     from '@/pages/ConvocatoriaPage';
 import AsistenciaPage       from '@/pages/AsistenciaPage';
@@ -59,6 +61,8 @@ export default function App() {
             <Route path="/pasar-lista"                         element={<PasarListaPage />} />
             <Route path="/tacticas"                            element={<TacticasPage />} />
             <Route path="/pizarra-tactica"                     element={<PizarraTacticaPage />} />
+            <Route path="/estadisticas"                        element={<EstadisticasPage />} />
+            <Route path="/clasificacion"                       element={<ClasificacionPage />} />
             <Route path="/perfil"                              element={<PerfilPage />} />
           </Route>
         </Route>

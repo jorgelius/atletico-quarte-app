@@ -5,6 +5,7 @@
 import { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { usePerfilStore }       from '@/stores/perfilStore';
+import { getEquipoNombre }      from '@/data/equipos';
 import { usePartidosStore }     from '@/stores/partidosStore';
 import { usePlantillaStore }    from '@/stores/plantillaStore';
 import { useAsistenciaStore }   from '@/stores/asistenciaStore';
@@ -16,22 +17,20 @@ export default function ConvocatoriaPage() {
   const { id: matchId } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const { perfil }        = usePerfilStore();
+  const { perfil, activeTeamId } = usePerfilStore();
   const partidosStore     = usePartidosStore();
   const plantillaStore    = usePlantillaStore();
   const asistenciaStore   = useAsistenciaStore();
   const convocatoriaStore = useConvocatoriaStore();
 
   useEffect(() => {
-    if (!perfil || !matchId) return;
-    // Cargar datos si no están en memoria
-    if (partidosStore.partidos.length === 0) partidosStore.cargar(perfil.id);
-    if (plantillaStore.jugadores.length === 0) plantillaStore.cargar(perfil.id);
-    if (asistenciaStore.estadisticasEquipo.length === 0) {
-      asistenciaStore.cargarResumenEquipo(perfil.id);
-    }
+    if (!perfil || !matchId || !activeTeamId) return;
+    // Siempre recargar plantilla y partidos con el equipo activo
+    plantillaStore.cargar(activeTeamId);
+    if (partidosStore.partidos.length === 0) partidosStore.cargar(activeTeamId);
+    asistenciaStore.cargarEstadisticasLista(activeTeamId);
     convocatoriaStore.cargar(matchId);
-  }, [perfil?.id, matchId]);
+  }, [activeTeamId, matchId]);
 
   if (!perfil || !matchId) return null;
 
@@ -62,9 +61,9 @@ export default function ConvocatoriaPage() {
     <ConvocatoriaEditor
       partido={partido}
       jugadores={plantillaStore.jugadores}
-      statsAsistencia={asistenciaStore.estadisticasEquipo}
+      statsAsistencia={asistenciaStore.estadisticasLista}
       initialSquad={initialSquad}
-      equipo={perfil.equipo}
+      equipo={getEquipoNombre(activeTeamId ?? '') || perfil.equipo}
       guardando={convocatoriaStore.guardando}
       onGuardar={handleGuardar}
       onBack={() => navigate('/partidos', { state: { openId: matchId } })}

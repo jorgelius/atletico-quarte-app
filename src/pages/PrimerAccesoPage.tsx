@@ -6,11 +6,11 @@ import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Loader2, AlertCircle, Camera, ChevronRight, ChevronLeft,
-  Shield, ClipboardList, Settings2, Check,
+  Shield, ClipboardList, Settings2, Check, Lock,
 } from 'lucide-react';
 import { usePerfilStore } from '@/stores/perfilStore';
 import type { Profile, Rol } from '@/types';
-import { GRUPOS_EQUIPOS } from '@/data/competicionData';
+import { GRUPOS_EQUIPOS_SELECTOR } from '@/data/equipos';
 import { Avatar } from '@/components/ui/Avatar';
 import escudoImg from '@/assets/escudo.png';
 
@@ -37,11 +37,21 @@ export default function PrimerAccesoPage() {
   const [nombre,       setNombre]       = useState('');
   const [rol,          setRol]          = useState<Rol>('entrenador');
   const [foto,         setFoto]         = useState<string | undefined>();
-  const [equipo,       setEquipo]       = useState('');
+  const [teamIds,      setTeamIds]      = useState<string[]>([]);
   const [errNombre,    setErrNombre]    = useState('');
   const [errEquipo,    setErrEquipo]    = useState('');
   const [guardando,    setGuardando]    = useState(false);
   const [errorGuardar, setErrorGuardar] = useState('');
+  const [codigoCargo,  setCodigoCargo]  = useState('');
+  const [errCodigo,    setErrCodigo]    = useState('');
+
+  const CODIGO_SECRETO = 'QUARTE2026';
+  const necesitaCodigo = rol === 'coordinador' || rol === 'admin';
+
+  function toggleEquipo(id: string) {
+    setTeamIds(prev => prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id]);
+    setErrEquipo('');
+  }
 
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -65,11 +75,16 @@ export default function PrimerAccesoPage() {
   function irAPaso2() {
     if (!nombre.trim()) { setErrNombre('El nombre es obligatorio'); return; }
     setErrNombre('');
+    if (necesitaCodigo && codigoCargo !== CODIGO_SECRETO) {
+      setErrCodigo('Código incorrecto. Contacta con la dirección del club.');
+      return;
+    }
+    setErrCodigo('');
     setPaso(2);
   }
 
   async function handleEmpezar() {
-    if (!equipo) { setErrEquipo('Selecciona tu equipo para continuar'); return; }
+    if (teamIds.length === 0) { setErrEquipo('Selecciona al menos un equipo para continuar'); return; }
     if (!session?.user) return;
     setErrEquipo('');
     setErrorGuardar('');
@@ -80,7 +95,8 @@ export default function PrimerAccesoPage() {
         creado_en:  Date.now(),
         nombre:     nombre.trim(),
         rol,
-        equipo,
+        equipo:     teamIds[0],
+        team_ids:   teamIds,
         avatar_b64: foto,
       };
       await guardarPerfil(perfil);
@@ -195,7 +211,7 @@ export default function PrimerAccesoPage() {
                   <button
                     key={value}
                     type="button"
-                    onClick={() => setRol(value)}
+                    onClick={() => { setRol(value); setCodigoCargo(''); setErrCodigo(''); }}
                     className={`flex items-center gap-3 px-4 py-3 rounded-xl border-2 text-left
                                 transition-all active:scale-[0.98]
                                 ${activo
@@ -217,6 +233,31 @@ export default function PrimerAccesoPage() {
                   </button>
                 );
               })}
+
+              {/* Campo de código — solo visible para coordinador/admin */}
+              {necesitaCodigo && (
+                <div className="flex flex-col gap-1.5 mt-1">
+                  <label className="font-titulo font-semibold text-sm text-quarte-negro flex items-center gap-1.5">
+                    <Lock size={13} className="text-quarte-azul" />
+                    Código de acceso
+                  </label>
+                  <input
+                    type="password"
+                    value={codigoCargo}
+                    onChange={e => { setCodigoCargo(e.target.value); setErrCodigo(''); }}
+                    placeholder="Código proporcionado por el club"
+                    className={`min-h-[48px] px-4 py-3 rounded-xl border-2 text-base font-cuerpo
+                                text-quarte-negro bg-white transition-colors outline-none
+                                placeholder:text-gray-400
+                                ${errCodigo
+                                  ? 'border-quarte-rojo'
+                                  : 'border-gray-200 focus:border-quarte-azul'}`}
+                  />
+                  {errCodigo && (
+                    <p className="text-xs text-quarte-rojo font-medium">{errCodigo}</p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
@@ -230,15 +271,15 @@ export default function PrimerAccesoPage() {
         </div>
       )}
 
-      {/* ── PASO 2 — Selección de equipo ───────────────────────── */}
+      {/* ── PASO 2 — Selección de equipos ──────────────────────── */}
       {paso === 2 && (
         <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6 flex flex-col gap-5">
           <div>
             <h2 className="font-titulo text-lg font-bold text-quarte-negro">
-              ¿Con qué equipo trabajas?
+              ¿Con qué equipo(s) trabajas?
             </h2>
             <p className="text-sm text-gray-400 mt-0.5">
-              Verás el próximo partido y la clasificación de tu equipo al entrar.
+              Puedes seleccionar más de uno si llevas varios equipos.
             </p>
           </div>
 
@@ -250,9 +291,9 @@ export default function PrimerAccesoPage() {
             </div>
           )}
 
-          {/* Grid de equipos agrupados */}
+          {/* Grid de equipos agrupados — multi-select */}
           <div className="flex flex-col gap-5 max-h-[50vh] overflow-y-auto scrollbar-hide -mx-1 px-1 pb-1">
-            {GRUPOS_EQUIPOS.map(grupo => (
+            {GRUPOS_EQUIPOS_SELECTOR.map(grupo => (
               <div key={grupo.label}>
                 <p className="text-[10px] font-titulo font-bold text-gray-400 uppercase
                               tracking-widest mb-2">
@@ -260,12 +301,12 @@ export default function PrimerAccesoPage() {
                 </p>
                 <div className="grid grid-cols-2 gap-2">
                   {grupo.equipos.map(eq => {
-                    const sel = equipo === eq.nombre;
+                    const sel = teamIds.includes(eq.id);
                     return (
                       <button
-                        key={eq.nombre}
+                        key={eq.id}
                         type="button"
-                        onClick={() => { setEquipo(eq.nombre); setErrEquipo(''); }}
+                        onClick={() => toggleEquipo(eq.id)}
                         className={`relative flex flex-col items-start gap-0.5 px-3 py-2.5
                                     rounded-xl border-2 text-left transition-all active:scale-[0.97]
                                     ${sel
@@ -292,6 +333,11 @@ export default function PrimerAccesoPage() {
             ))}
           </div>
 
+          {teamIds.length > 0 && (
+            <p className="text-xs text-quarte-azul font-titulo font-semibold -mt-2">
+              {teamIds.length === 1 ? '1 equipo seleccionado' : `${teamIds.length} equipos seleccionados`}
+            </p>
+          )}
           {errEquipo && (
             <p className="text-xs text-quarte-rojo font-medium -mt-3">{errEquipo}</p>
           )}

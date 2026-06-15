@@ -11,6 +11,7 @@ import { usePerfilStore }       from '@/stores/perfilStore';
 import { usePartidosStore }     from '@/stores/partidosStore';
 import { useEstadisticasStore } from '@/stores/estadisticasStore';
 import { useConvocatoriaStore } from '@/stores/convocatoriaStore';
+import { TeamSwitcher }         from '@/components/ui/TeamSwitcher';
 import { Avatar } from '@/components/ui/Avatar';
 import escudoImg from '@/assets/escudo.png';
 import { supabase } from '@/data/supabaseClient';
@@ -37,20 +38,20 @@ interface UltimoEntreno {
 }
 
 export default function InicioPage() {
-  const { perfil }       = usePerfilStore();
-  const navigate         = useNavigate();
-  const partidosStore    = usePartidosStore();
-  const estadStore       = useEstadisticasStore();
-  const convocStore      = useConvocatoriaStore();
+  const { perfil, activeTeamId } = usePerfilStore();
+  const navigate                 = useNavigate();
+  const partidosStore            = usePartidosStore();
+  const estadStore               = useEstadisticasStore();
+  const convocStore              = useConvocatoriaStore();
 
   const [ultimoEntreno, setUltimoEntreno] = useState<UltimoEntreno | null>(null);
 
   useEffect(() => {
-    if (!perfil) return;
-    if (partidosStore.partidos.length === 0) partidosStore.cargar(perfil.id);
-    if (estadStore.stats.length === 0 && !estadStore.cargando) estadStore.cargar(perfil.id);
-    cargarUltimoEntreno(perfil.id);
-  }, [perfil?.id]);
+    if (!perfil || !activeTeamId) return;
+    partidosStore.cargar(activeTeamId);
+    estadStore.cargar(activeTeamId);
+    cargarUltimoEntreno(perfil.id);  // entrenamientos = biblioteca personal del entrenador
+  }, [activeTeamId]);
 
   // Cargar el último entrenamiento con asistencia pasada
   async function cargarUltimoEntreno(teamId: string) {
@@ -142,12 +143,7 @@ export default function InicioPage() {
             <h1 className="font-titulo text-2xl font-extrabold tracking-tight text-white">
               CD Atlético Quarte
             </h1>
-            {perfil?.equipo && (
-              <span className="bg-white/15 border border-white/20 text-white text-xs
-                               font-titulo font-semibold px-3 py-1 rounded-full">
-                {perfil.equipo}
-              </span>
-            )}
+            <TeamSwitcher />
           </div>
         </div>
       </div>
