@@ -89,7 +89,10 @@ function PizarraElement({
   onDragEnd: (id: string, x: number, y: number) => void;
   readOnly: boolean;
 }) {
+<<<<<<< HEAD
   // Zona rectangular
+=======
+>>>>>>> dev
   if (el.tipo === 'zona') {
     const w = (el.x2 ?? el.x + 80) - el.x;
     const h = (el.y2 ?? el.y + 50) - el.y;
@@ -106,7 +109,10 @@ function PizarraElement({
     );
   }
 
+<<<<<<< HEAD
   // Flechas
+=======
+>>>>>>> dev
   if (el.tipo === 'flecha_pase' || el.tipo === 'flecha_movimiento') {
     const color = el.color ?? (el.tipo === 'flecha_pase' ? '#FFD700' : '#00E5FF');
     return (
@@ -123,7 +129,10 @@ function PizarraElement({
     );
   }
 
+<<<<<<< HEAD
   // Texto
+=======
+>>>>>>> dev
   if (el.tipo === 'texto') {
     return (
       <Text
@@ -177,6 +186,7 @@ function PizarraElement({
 // ── COMPONENTE PRINCIPAL ─────────────────────────────────────
 const PitchBoard = forwardRef<PitchBoardHandle, PitchBoardProps>(
   ({ formato, readOnly = false, initialData, onChange }, ref) => {
+<<<<<<< HEAD
   const containerRef   = useRef<HTMLDivElement>(null);
   const stageRef       = useRef<Konva.Stage | null>(null);
   const fieldLayerRef  = useRef<Konva.Layer>(null);
@@ -195,6 +205,26 @@ const PitchBoard = forwardRef<PitchBoardHandle, PitchBoardProps>(
   const [isFullscreen, setFullscreen] = useState(false);
 
   const [keyframes,  setKeyframes]  = useState<KeyframePizarra[]>(() => {
+=======
+  const containerRef    = useRef<HTMLDivElement>(null);
+  const stageRef        = useRef<Konva.Stage | null>(null);
+  const fieldLayerRef   = useRef<Konva.Layer>(null);
+  const previewLayerRef = useRef<Konva.Layer>(null);
+  const previewLineRef  = useRef<Konva.Line | null>(null);
+  const animRef         = useRef<number | null>(null);
+  const drawPtsRef      = useRef<number[]>([]);
+  const isDrawingRef    = useRef(false);
+  const drawStartRef    = useRef<{ x: number; y: number } | null>(null);
+  const hasDraggedRef   = useRef(false);
+  const textInputRef    = useRef<HTMLInputElement>(null);
+  const undoStack       = useRef<{ idx: number; elementos: ElementoPizarra[]; trazos: TrazoCanvas[] }[]>([]);
+
+  const RATIO = formato === 'F11' ? 1.54 : 1.5;
+  const [size, setSize]               = useState({ w: 320, h: 490 });
+  const [isFullscreen, setFullscreen] = useState(false);
+
+  const [keyframes, setKeyframes] = useState<KeyframePizarra[]>(() => {
+>>>>>>> dev
     if (initialData) {
       try {
         const parsed: EscenapPizarra = JSON.parse(initialData);
@@ -203,6 +233,7 @@ const PitchBoard = forwardRef<PitchBoardHandle, PitchBoardProps>(
     }
     return [{ id: crypto.randomUUID(), elementos: [], trazos: [], duracion_ms: 1200 }];
   });
+<<<<<<< HEAD
   const [currentKF,   setCurrentKF]  = useState(0);
   const [selectedEl,  setSelectedEl] = useState<string | null>(null);
   const [tool,        setTool]       = useState<ToolType>('select');
@@ -215,6 +246,20 @@ const PitchBoard = forwardRef<PitchBoardHandle, PitchBoardProps>(
   const [pendingZona,   setPendingZona]   = useState<{ x: number; y: number; w: number; h: number } | null>(null);
   const [textPos,     setTextPos]    = useState<{ x: number; y: number } | null>(null);
   const [textVal,     setTextVal]    = useState('');
+=======
+  const [currentKF,     setCurrentKF]     = useState(0);
+  const [selectedEl,    setSelectedEl]    = useState<string | null>(null);
+  const [tool,          setTool]          = useState<ToolType>('select');
+  const [color,         setColor]         = useState(PALETA[0]);
+  const [grosor,        setGrosor]        = useState(GROSORES[0]);
+  const [playing,       setPlaying]       = useState(false);
+  const [playSpeed,     setPlaySpeed]     = useState(1);
+  const [displayEls,    setDisplayEls]    = useState<ElementoPizarra[] | null>(null);
+  const [pendingFlecha, setPendingFlecha] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
+  const [pendingZona,   setPendingZona]   = useState<{ x: number; y: number; w: number; h: number } | null>(null);
+  const [textPos,       setTextPos]       = useState<{ x: number; y: number } | null>(null);
+  const [textVal,       setTextVal]       = useState('');
+>>>>>>> dev
 
   const currentEls = displayEls ?? keyframes[currentKF]?.elementos ?? [];
 
@@ -242,7 +287,6 @@ const PitchBoard = forwardRef<PitchBoardHandle, PitchBoardProps>(
     if (fieldLayerRef.current) drawPitchLayer(fieldLayerRef.current, size.w, size.h, formato);
   }, [size, formato]);
 
-  // Notifica cambios
   useEffect(() => {
     if (onChange && !playing) {
       const scene: EscenapPizarra = { formato, keyframes };
@@ -256,7 +300,11 @@ const PitchBoard = forwardRef<PitchBoardHandle, PitchBoardProps>(
     getJSON:   () => JSON.stringify({ formato, keyframes } satisfies EscenapPizarra),
   }));
 
+<<<<<<< HEAD
   // ── Undo ────────────────────────────────────────────────
+=======
+  // ── Undo ─────────────────────────────────────────────────
+>>>>>>> dev
   function pushUndo() {
     const kf = keyframes[currentKF];
     undoStack.current = [
@@ -433,10 +481,21 @@ const PitchBoard = forwardRef<PitchBoardHandle, PitchBoardProps>(
     setTool('select');
   }, [readOnly, playing, tool, currentKF, keyframes, updateKFElements]);
 
+<<<<<<< HEAD
   // ── Texto confirm ────────────────────────────────────────
   function confirmText() {
     if (textVal.trim() && textPos) {
       const newEl: ElementoPizarra = { id: crypto.randomUUID(), tipo: 'texto', x: textPos.x, y: textPos.y, etiqueta: textVal.trim(), color };
+=======
+  // ── Confirmar texto ──────────────────────────────────────
+  function confirmText() {
+    if (textVal.trim() && textPos) {
+      const newEl: ElementoPizarra = {
+        id: crypto.randomUUID(), tipo: 'texto',
+        x: textPos.x, y: textPos.y,
+        etiqueta: textVal.trim(), color,
+      };
+>>>>>>> dev
       pushUndo();
       updateKFElements(currentKF, [...keyframes[currentKF].elementos, newEl]);
     }
@@ -458,7 +517,11 @@ const PitchBoard = forwardRef<PitchBoardHandle, PitchBoardProps>(
     const newKF: KeyframePizarra = {
       id: crypto.randomUUID(),
       elementos: (lastKF?.elementos ?? []).map(e => ({ ...e, id: crypto.randomUUID() })),
+<<<<<<< HEAD
       trazos: (lastKF?.trazos ?? []).map(t => ({ ...t, id: crypto.randomUUID() })),
+=======
+      trazos:    (lastKF?.trazos ?? []).map(t => ({ ...t, id: crypto.randomUUID() })),
+>>>>>>> dev
       duracion_ms: 1200,
     };
     setKeyframes(prev => [...prev, newKF]);
@@ -540,10 +603,16 @@ const PitchBoard = forwardRef<PitchBoardHandle, PitchBoardProps>(
       {/* ── Toolbar ─────────────────────────────────────────── */}
       {!readOnly && (
         <div className="flex items-center gap-1 px-1 py-1.5 bg-gray-900 overflow-x-auto scrollbar-hide flex-shrink-0">
+<<<<<<< HEAD
           {/* Herramientas */}
           {TOOLS.map(t => (
             <button key={t.type}
               onClick={() => { setTool(t.type); }}
+=======
+          {TOOLS.map(t => (
+            <button key={t.type} type="button"
+              onClick={() => setTool(t.type)}
+>>>>>>> dev
               className={`flex-shrink-0 flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg
                           text-[10px] font-titulo font-semibold transition-colors min-w-[40px]
                           ${tool === t.type ? 'bg-quarte-azul text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}`}>
@@ -554,21 +623,33 @@ const PitchBoard = forwardRef<PitchBoardHandle, PitchBoardProps>(
 
           <div className="w-px h-7 bg-gray-700 flex-shrink-0 mx-0.5" />
 
+<<<<<<< HEAD
           {/* Colores */}
           {showColor && PALETA.map(c => (
             <button key={c}
+=======
+          {showColor && PALETA.map(c => (
+            <button key={c} type="button"
+>>>>>>> dev
               onClick={() => setColor(c)}
               style={{ background: c }}
               className={`flex-shrink-0 w-6 h-6 rounded-full transition-transform
                           ${color === c ? 'scale-125 ring-2 ring-quarte-azul ring-offset-1 ring-offset-gray-900' : 'opacity-60 hover:opacity-100'}`} />
           ))}
 
+<<<<<<< HEAD
           {/* Grosor */}
+=======
+>>>>>>> dev
           {showGrosor && (
             <>
               <div className="w-px h-7 bg-gray-700 flex-shrink-0 mx-0.5" />
               {GROSORES.map(g => (
+<<<<<<< HEAD
                 <button key={g}
+=======
+                <button key={g} type="button"
+>>>>>>> dev
                   onClick={() => setGrosor(g)}
                   className={`flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg transition-colors
                               ${grosor === g ? 'bg-quarte-azul' : 'bg-gray-800 hover:bg-gray-700'}`}>
@@ -580,23 +661,36 @@ const PitchBoard = forwardRef<PitchBoardHandle, PitchBoardProps>(
 
           <div className="w-px h-7 bg-gray-700 flex-shrink-0 mx-0.5" />
 
+<<<<<<< HEAD
           {/* Deshacer */}
           <button onClick={undo}
+=======
+          <button type="button" onClick={undo}
+>>>>>>> dev
             className="flex-shrink-0 flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg min-w-[40px]
                        bg-gray-800 text-gray-300 hover:bg-gray-700 text-[10px] font-titulo font-semibold">
             <Undo2 size={14} />Desah.
           </button>
 
+<<<<<<< HEAD
           {/* Borrar todo */}
           <button onClick={clearAll}
+=======
+          <button type="button" onClick={clearAll}
+>>>>>>> dev
             className="flex-shrink-0 flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg min-w-[40px]
                        bg-gray-800 text-gray-300 hover:bg-gray-700 text-[10px] font-titulo font-semibold">
             <RotateCcw size={14} />Limpiar
           </button>
 
+<<<<<<< HEAD
           {/* Eliminar seleccionado */}
           {selectedEl && (
             <button onClick={borrarSeleccionado}
+=======
+          {selectedEl && (
+            <button type="button" onClick={borrarSeleccionado}
+>>>>>>> dev
               className="flex-shrink-0 flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg min-w-[40px]
                          bg-red-900 text-red-300 hover:bg-red-800 text-[10px] font-titulo font-semibold">
               <Trash2 size={14} />Borrar
@@ -605,8 +699,12 @@ const PitchBoard = forwardRef<PitchBoardHandle, PitchBoardProps>(
 
           <div className="ml-auto flex-shrink-0" />
 
+<<<<<<< HEAD
           {/* Pantalla completa */}
           <button onClick={() => setFullscreen(v => !v)}
+=======
+          <button type="button" onClick={() => setFullscreen(v => !v)}
+>>>>>>> dev
             className="flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700">
             {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
           </button>
@@ -630,12 +728,19 @@ const PitchBoard = forwardRef<PitchBoardHandle, PitchBoardProps>(
             onTouchEnd={handleMouseUp}
             onClick={handleStageClick}
             onTap={handleStageClick}
+<<<<<<< HEAD
             style={{ cursor: tool === 'rotulador' ? 'crosshair' : tool === 'select' ? 'default' : 'crosshair' }}
           >
             {/* Campo */}
             <Layer ref={fieldLayerRef} listening={false} />
 
             {/* Trazos freehand del keyframe actual */}
+=======
+            style={{ cursor: tool === 'rotulador' || tool === 'flecha_pase' || tool === 'flecha_movimiento' || tool === 'zona' ? 'crosshair' : 'default' }}
+          >
+            <Layer ref={fieldLayerRef} listening={false} />
+
+>>>>>>> dev
             <Layer listening={false}>
               {(keyframes[currentKF]?.trazos ?? []).map(t => (
                 <Line key={t.id}
@@ -644,12 +749,18 @@ const PitchBoard = forwardRef<PitchBoardHandle, PitchBoardProps>(
               ))}
             </Layer>
 
+<<<<<<< HEAD
             {/* Preview layer imperativo (rotulador en vivo) */}
             <Layer ref={previewLayerRef} listening={false} />
 
             {/* Elementos interactivos */}
             <Layer>
               {/* Preview flecha mientras se arrastra */}
+=======
+            <Layer ref={previewLayerRef} listening={false} />
+
+            <Layer>
+>>>>>>> dev
               {pendingFlecha && Math.hypot(pendingFlecha.x2 - pendingFlecha.x1, pendingFlecha.y2 - pendingFlecha.y1) > 5 && (
                 <Arrow
                   points={[pendingFlecha.x1, pendingFlecha.y1, pendingFlecha.x2, pendingFlecha.y2]}
@@ -662,7 +773,10 @@ const PitchBoard = forwardRef<PitchBoardHandle, PitchBoardProps>(
                 />
               )}
 
+<<<<<<< HEAD
               {/* Preview zona mientras se arrastra */}
+=======
+>>>>>>> dev
               {pendingZona && pendingZona.w > 0 && (
                 <Rect
                   x={pendingZona.x} y={pendingZona.y} width={pendingZona.w} height={pendingZona.h}
@@ -671,7 +785,10 @@ const PitchBoard = forwardRef<PitchBoardHandle, PitchBoardProps>(
                 />
               )}
 
+<<<<<<< HEAD
               {/* Elementos del keyframe */}
+=======
+>>>>>>> dev
               {currentEls.map(el => (
                 <PizarraElement key={el.id} el={el}
                   selected={selectedEl === el.id}
@@ -682,7 +799,10 @@ const PitchBoard = forwardRef<PitchBoardHandle, PitchBoardProps>(
             </Layer>
           </Stage>
 
+<<<<<<< HEAD
           {/* Input de texto flotante */}
+=======
+>>>>>>> dev
           {textPos && (
             <input
               ref={textInputRef}
@@ -695,6 +815,7 @@ const PitchBoard = forwardRef<PitchBoardHandle, PitchBoardProps>(
               onBlur={confirmText}
             />
           )}
+<<<<<<< HEAD
 
           {/* Leyenda colores */}
           {readOnly && (
@@ -709,16 +830,24 @@ const PitchBoard = forwardRef<PitchBoardHandle, PitchBoardProps>(
               </div>
             </div>
           )}
+=======
+>>>>>>> dev
         </div>
       </div>
 
       {/* ── Controles keyframes + reproducción ──────────────── */}
       {!readOnly && (
         <div className="flex flex-col gap-2 px-1 pb-1 flex-shrink-0">
+<<<<<<< HEAD
           {/* Timeline */}
           <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
             {keyframes.map((kf, i) => (
               <button key={kf.id}
+=======
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+            {keyframes.map((kf, i) => (
+              <button key={kf.id} type="button"
+>>>>>>> dev
                 onClick={() => { stopPlay(); setCurrentKF(i); setSelectedEl(null); }}
                 className={`flex-shrink-0 relative px-3 py-1.5 rounded-lg text-xs font-titulo font-bold transition-colors
                              ${i === currentKF ? 'bg-quarte-azul text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}>
@@ -732,20 +861,23 @@ const PitchBoard = forwardRef<PitchBoardHandle, PitchBoardProps>(
                 )}
               </button>
             ))}
-            <button onClick={addKeyframe}
+            <button type="button" onClick={addKeyframe}
               className="flex-shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-lg
                          bg-gray-700 text-gray-300 hover:bg-gray-600 text-xs font-titulo">
               <Plus size={12} /> Paso
             </button>
           </div>
 
+<<<<<<< HEAD
           {/* Reproducción */}
+=======
+>>>>>>> dev
           <div className="flex items-center gap-2">
-            <button onClick={() => { stopPlay(); setCurrentKF(0); }}
+            <button type="button" onClick={() => { stopPlay(); setCurrentKF(0); }}
               className="w-9 h-9 flex items-center justify-center rounded-lg bg-gray-700 text-gray-300 hover:bg-gray-600">
               <SkipBack size={16} />
             </button>
-            <button
+            <button type="button"
               onClick={playing ? stopPlay : startPlay}
               disabled={keyframes.length < 2}
               className={`flex-1 h-9 flex items-center justify-center rounded-lg font-titulo font-bold text-sm
@@ -763,10 +895,13 @@ const PitchBoard = forwardRef<PitchBoardHandle, PitchBoardProps>(
         </div>
       )}
 
+<<<<<<< HEAD
       {/* Modo readOnly: solo botón play */}
+=======
+>>>>>>> dev
       {readOnly && keyframes.length >= 2 && (
         <div className="flex justify-center py-1">
-          <button onClick={playing ? stopPlay : startPlay}
+          <button type="button" onClick={playing ? stopPlay : startPlay}
             className={`flex items-center gap-2 px-6 py-2 rounded-full font-titulo font-bold text-sm
                         ${playing ? 'bg-quarte-rojo text-white' : 'bg-quarte-verde text-white'}`}>
             {playing ? <><Pause size={14} /> Pausar</> : <><Play size={14} /> Ver animación</>}
