@@ -293,7 +293,7 @@ const PitchBoard = forwardRef<PitchBoardHandle, PitchBoardProps>(
     setSelectedEl(null);
   }
 
-  // ── Eventos de dibujo (mouse/touch) ─────────────────────
+  // ── Eventos de dibujo ────────────────────────────────────
   const handleMouseDown = useCallback((e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
     if (readOnly || playing) return;
     const pos = getPos(e);
@@ -540,7 +540,6 @@ const PitchBoard = forwardRef<PitchBoardHandle, PitchBoardProps>(
       {!readOnly && (
         <div className="flex items-center gap-1 px-1 py-1.5 bg-gray-900 overflow-x-auto scrollbar-hide flex-shrink-0">
           {TOOLS.map(t => (
-            // type="button" es obligatorio: evita que el formulario padre se envíe al hacer clic
             <button key={t.type} type="button"
               onClick={() => setTool(t.type)}
               className={`flex-shrink-0 flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg
@@ -627,7 +626,6 @@ const PitchBoard = forwardRef<PitchBoardHandle, PitchBoardProps>(
           >
             <Layer ref={fieldLayerRef} listening={false} />
 
-            {/* Trazos freehand del keyframe actual */}
             <Layer listening={false}>
               {(keyframes[currentKF]?.trazos ?? []).map(t => (
                 <Line key={t.id}
@@ -636,10 +634,8 @@ const PitchBoard = forwardRef<PitchBoardHandle, PitchBoardProps>(
               ))}
             </Layer>
 
-            {/* Preview layer imperativo (rotulador en vivo) */}
             <Layer ref={previewLayerRef} listening={false} />
 
-            {/* Elementos interactivos */}
             <Layer>
               {pendingFlecha && Math.hypot(pendingFlecha.x2 - pendingFlecha.x1, pendingFlecha.y2 - pendingFlecha.y1) > 5 && (
                 <Arrow
