@@ -245,7 +245,7 @@ export default function TacticasPage() {
   const formatoEquipo = getFormatoEquipo(teamId);
 
   const filtered = (() => {
-    let base = store.items.filter(t => t.formato === formatoEquipo);
+    let base = store.items.filter(t => t.es_sugerido || t.formato === formatoEquipo);
     if (tab === 'sugeridos') base = base.filter(t => t.es_sugerido);
     if (tab === 'favoritos') base = base.filter(t => store.isFav(t.id));
     if (tab === 'mios')      base = base.filter(t => t.author_id === teamId);
