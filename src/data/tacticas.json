@@ -1,0 +1,499 @@
+[
+  {
+    "id": "presion-alta-4-3-3",
+    "nombre": "Presión alta en 4-3-3",
+    "categoria": "Defensa",
+    "fase": "Presion",
+    "formacion": "4-3-3",
+    "descripcion": "Sistema de presión colectiva en bloque alto, popularizado por Klopp en Liverpool y Guardiola en Barcelona. Los tres delanteros orientan la presión hacia uno de los centrales rivales, los medios cortan las líneas de pase al pivote y los laterales anticipan a los extremos rivales. El objetivo es provocar el error o el pase largo en los primeros 6 segundos tras la posesión rival.",
+    "objetivo": "Recuperar el balón en los primeros 30 metros del campo rival mediante pressing coordinado de las tres líneas.",
+    "claves": [
+      "El delantero centro orienta el press cerrando el pase al central contrario.",
+      "Los extremos cubren los laterales rivales antes de recibir.",
+      "Los medios anticipan la línea de pase al pivote rival.",
+      "La línea defensiva sube para achicar espacio y activar el fuera de juego.",
+      "Si no se recupera en 6 segundos, repliegue organizado al bloque medio."
+    ],
+    "animacion": {
+      "field": "full",
+      "label": "Pressing 4-3-3",
+      "players": [
+        { "id": "GK",    "start": [200, 248], "team": "GK", "label": "P"  },
+        { "id": "LD",    "start": [332, 210], "team": "A",  "label": "LD" },
+        { "id": "DFCR",  "start": [252, 218], "team": "A",  "label": "D"  },
+        { "id": "DFCL",  "start": [148, 218], "team": "A",  "label": "D"  },
+        { "id": "LI",    "start": [68,  210], "team": "A",  "label": "LI" },
+        { "id": "MCD",   "start": [200, 168], "team": "A",  "label": "MC" },
+        { "id": "MCOR",  "start": [272, 148], "team": "A",  "label": "M"  },
+        { "id": "MCOL",  "start": [128, 148], "team": "A",  "label": "M"  },
+        { "id": "ED",    "start": [328, 100], "team": "A",  "label": "ED" },
+        { "id": "DC",    "start": [200,  82], "team": "A",  "label": "DC" },
+        { "id": "EI",    "start": [72,  100], "team": "A",  "label": "EI" },
+        { "id": "GKR",   "start": [200,  12], "team": "B",  "label": "P"  },
+        { "id": "LDR",   "start": [332,  45], "team": "B",  "label": "D"  },
+        { "id": "DFC1R", "start": [248,  52], "team": "B",  "label": "D"  },
+        { "id": "DFC2R", "start": [152,  52], "team": "B",  "label": "D"  },
+        { "id": "LIR",   "start": [68,   45], "team": "B",  "label": "D"  },
+        { "id": "MCR1",  "start": [252, 102], "team": "B",  "label": "M"  },
+        { "id": "MCR2",  "start": [148, 102], "team": "B",  "label": "M"  }
+      ],
+      "cones": [],
+      "arrows": [],
+      "zones": [
+        { "x": 10, "y": 5, "w": 380, "h": 82, "color": "rgba(239,68,68,0.08)" }
+      ],
+      "ballStart": [200, 12],
+      "scenes": [
+        { "dur": 1400, "pos": { "ball": [200, 12] } },
+        { "dur": 1200, "pos": { "ball": [200, 12], "DC": [180, 48], "EI": [108, 58], "ED": [290, 58], "MCOL": [130, 112], "MCOR": [270, 112] } },
+        { "dur": 1100, "pos": { "ball": [152, 52], "DC": [162, 72], "EI": [105, 60], "MCOL": [112, 98] } },
+        { "dur": 1000, "pos": { "ball": [200, 12], "DC": [180, 28] } },
+        { "dur": 900,  "pos": { "ball": [200, 12], "DC": [200, 82], "EI": [72, 100], "ED": [328, 100], "MCOL": [128, 148], "MCOR": [272, 148] } }
+      ]
+    }
+  },
+
+  {
+    "id": "salida-balon-portero-4-2-3-1",
+    "nombre": "Salida de balón desde el portero en 4-2-3-1",
+    "categoria": "Posesion",
+    "fase": "Salida de balon",
+    "formacion": "4-2-3-1",
+    "descripcion": "Sistema de construcción desde atrás con el portero como primer jugador de campo. El doble pivote (4-2-3-1) ofrece dos opciones de salida a los centrales. Si el rival presiona, el lateral libre recibe en profundidad y el mediapunta cae a recibir de cara. La idea es superar la primera línea de presión rival con combinaciones cortas antes de abrir el juego hacia las bandas.",
+    "objetivo": "Superar el primer bloque de presión rival a través de circulación corta, llegando al mediapunta en posición de giro.",
+    "claves": [
+      "Los centrales se abren para crear ángulos al portero.",
+      "El pivote del lado del balón cae a recibir entre líneas.",
+      "El lateral contrario sube en carrera cuando el central tiene el balón.",
+      "El mediapunta cae a recibir de espaldas al rival y gira si puede.",
+      "Si hay presión extrema, el portero lanza largo al delantero para perder la presión."
+    ],
+    "animacion": {
+      "field": "half_d",
+      "label": "Build-up 4-2-3-1",
+      "players": [
+        { "id": "GK",   "start": [200,  22], "team": "GK", "label": "P"  },
+        { "id": "LI",   "start": [52,   82], "team": "A",  "label": "LI" },
+        { "id": "DFCL", "start": [150,  68], "team": "A",  "label": "D"  },
+        { "id": "DFCR", "start": [250,  68], "team": "A",  "label": "D"  },
+        { "id": "LD",   "start": [348,  82], "team": "A",  "label": "LD" },
+        { "id": "MCD1", "start": [152, 140], "team": "A",  "label": "MC" },
+        { "id": "MCD2", "start": [248, 140], "team": "A",  "label": "MC" },
+        { "id": "EI",   "start": [68,  182], "team": "A",  "label": "EI" },
+        { "id": "MO",   "start": [200, 165], "team": "A",  "label": "MO" },
+        { "id": "ED",   "start": [332, 182], "team": "A",  "label": "ED" },
+        { "id": "DC",   "start": [200, 205], "team": "A",  "label": "DC" },
+        { "id": "F1R",  "start": [200,  80], "team": "B",  "label": "A"  },
+        { "id": "M1R",  "start": [148, 138], "team": "B",  "label": "M"  },
+        { "id": "M2R",  "start": [252, 138], "team": "B",  "label": "M"  }
+      ],
+      "cones": [],
+      "arrows": [],
+      "zones": [],
+      "ballStart": [200, 22],
+      "scenes": [
+        { "dur": 1200, "pos": { "ball": [200, 22] } },
+        { "dur": 1100, "pos": { "ball": [250, 68], "MCD2": [272, 118], "F1R": [240, 72] } },
+        { "dur": 1200, "pos": { "ball": [348, 82], "MCD2": [312, 125] } },
+        { "dur": 1100, "pos": { "ball": [312, 125], "MO": [270, 152], "ED": [340, 165] } },
+        { "dur": 1000, "pos": { "ball": [270, 152], "DC": [215, 195] } }
+      ]
+    }
+  },
+
+  {
+    "id": "trampa-de-presion-lateral",
+    "nombre": "Trampa de presión orientando al lateral",
+    "categoria": "Defensa",
+    "fase": "Presion",
+    "formacion": "4-4-2",
+    "descripcion": "Variante del pressing organizado donde el equipo NO presiona de frente sino que cierra el pase al centro, forzando deliberadamente el balón hacia el lateral del campo. Una vez el lateral rival recibe en la banda, el mediocampista de ese lado cierra, el lateral propio pisa y el delantero corta el pase interior. El rival queda atrapado en la cal sin opciones de salida.",
+    "objetivo": "Aislar al lateral rival en la banda, generar una situación 3v1 en la zona y recuperar el balón con ventaja posicional.",
+    "claves": [
+      "El delantero cierra el pase al central contrario sin presionar frontalmente.",
+      "El mediocampista del lado contrario orienta al central hacia la banda.",
+      "En el momento del pase al lateral, el mediocampista propio lanza el press.",
+      "El lateral propio sube para cerrar el espacio detrás del mediocampista.",
+      "El mediocampista del lado opuesto cubre el pase interior para completar la trampa."
+    ],
+    "animacion": {
+      "field": "full",
+      "label": "Pressing trap lateral",
+      "players": [
+        { "id": "GK",    "start": [200, 248], "team": "GK", "label": "P"  },
+        { "id": "LI",    "start": [68,  215], "team": "A",  "label": "LI" },
+        { "id": "DFCL",  "start": [148, 222], "team": "A",  "label": "D"  },
+        { "id": "DFCR",  "start": [252, 222], "team": "A",  "label": "D"  },
+        { "id": "LD",    "start": [332, 215], "team": "A",  "label": "LD" },
+        { "id": "MI",    "start": [72,  175], "team": "A",  "label": "M"  },
+        { "id": "MC1",   "start": [155, 168], "team": "A",  "label": "MC" },
+        { "id": "MC2",   "start": [245, 168], "team": "A",  "label": "MC" },
+        { "id": "MD",    "start": [328, 175], "team": "A",  "label": "M"  },
+        { "id": "DC1",   "start": [152, 118], "team": "A",  "label": "DC" },
+        { "id": "DC2",   "start": [248, 118], "team": "A",  "label": "DC" },
+        { "id": "GKR",   "start": [200,  12], "team": "B",  "label": "P"  },
+        { "id": "LIR",   "start": [68,   45], "team": "B",  "label": "D"  },
+        { "id": "DFC1R", "start": [152,  52], "team": "B",  "label": "D"  },
+        { "id": "DFC2R", "start": [248,  52], "team": "B",  "label": "D"  },
+        { "id": "LDR",   "start": [332,  45], "team": "B",  "label": "D"  }
+      ],
+      "cones": [],
+      "arrows": [],
+      "zones": [
+        { "x": 290, "y": 5, "w": 100, "h": 90, "color": "rgba(239,68,68,0.10)" }
+      ],
+      "ballStart": [248, 52],
+      "scenes": [
+        { "dur": 1300, "pos": { "ball": [248, 52], "DC2": [248, 88], "DC1": [200, 90] } },
+        { "dur": 1200, "pos": { "ball": [332, 45], "MD": [328, 132] } },
+        { "dur": 1100, "pos": { "ball": [332, 45], "MD": [338, 58], "MC2": [285, 138], "LD": [340, 198] } },
+        { "dur": 1000, "pos": { "ball": [332, 45], "MD": [338, 52], "LD": [338, 192] } },
+        { "dur": 900,  "pos": { "ball": [248, 52], "DC2": [248, 118], "MD": [328, 175], "LD": [332, 215], "MC2": [245, 168] } }
+      ]
+    }
+  },
+
+  {
+    "id": "bloque-bajo-compacto",
+    "nombre": "Bloque bajo replegado y compacto",
+    "categoria": "Defensa",
+    "fase": "Bloque defensivo",
+    "formacion": "4-4-2",
+    "descripcion": "Sistema defensivo de repliegue profundo en 4-4-2 con las dos líneas (media y defensiva) muy juntas entre sí, dejando solo al doble pivote fuera del área propia. El espacio entre líneas no supera los 10 metros. El bloque bascule lateralmente con cada cambio de juego rival y solo un delantero sale a presionar en el momento en que el rival levanta la cabeza, el otro mantiene la posición.",
+    "objetivo": "Negar el espacio interior al rival, obligarle a cruzar desde la banda y defender el área propia con superioridad numérica.",
+    "claves": [
+      "Las dos líneas de cuatro se mantienen a menos de 10 metros entre sí.",
+      "Los dos delanteros no presionan a la vez; uno activa, el otro observa.",
+      "La línea de mediocampo no supera la línea del área grande propia.",
+      "Al cambio de juego lateral, todo el bloque bascule en bloque en menos de 3 segundos.",
+      "El defensa más alejado del balón cierra el carril central, no persigue al extremo rival."
+    ],
+    "animacion": {
+      "field": "full",
+      "label": "Bloque bajo 4-4-2",
+      "players": [
+        { "id": "GK",    "start": [200, 248], "team": "GK", "label": "P"  },
+        { "id": "LI",    "start": [68,  228], "team": "A",  "label": "LI" },
+        { "id": "DFCL",  "start": [148, 232], "team": "A",  "label": "D"  },
+        { "id": "DFCR",  "start": [252, 232], "team": "A",  "label": "D"  },
+        { "id": "LD",    "start": [332, 228], "team": "A",  "label": "LD" },
+        { "id": "MI",    "start": [72,  198], "team": "A",  "label": "M"  },
+        { "id": "MC1",   "start": [148, 195], "team": "A",  "label": "MC" },
+        { "id": "MC2",   "start": [252, 195], "team": "A",  "label": "MC" },
+        { "id": "MD",    "start": [328, 198], "team": "A",  "label": "M"  },
+        { "id": "DC1",   "start": [155, 172], "team": "A",  "label": "DC" },
+        { "id": "DC2",   "start": [245, 172], "team": "A",  "label": "DC" },
+        { "id": "EDR",   "start": [55,  100], "team": "B",  "label": "E"  },
+        { "id": "MC1R",  "start": [155, 108], "team": "B",  "label": "M"  },
+        { "id": "MC2R",  "start": [245, 108], "team": "B",  "label": "M"  },
+        { "id": "EIR",   "start": [345, 100], "team": "B",  "label": "E"  },
+        { "id": "DFC1R", "start": [155,  55], "team": "B",  "label": "D"  },
+        { "id": "DFC2R", "start": [245,  55], "team": "B",  "label": "D"  }
+      ],
+      "cones": [],
+      "arrows": [],
+      "zones": [
+        { "x": 50, "y": 162, "w": 300, "h": 95, "color": "rgba(59,130,246,0.06)" }
+      ],
+      "ballStart": [155, 108],
+      "scenes": [
+        { "dur": 1300, "pos": { "ball": [155, 108] } },
+        { "dur": 1200, "pos": { "ball": [55, 100], "MI": [52, 185], "DC1": [108, 168], "DFCL": [118, 228] } },
+        { "dur": 1200, "pos": { "ball": [345, 100], "LD": [348, 218], "MD": [348, 185], "DC2": [292, 168], "DFCR": [282, 228], "MI": [72, 198], "DC1": [155, 172], "DFCL": [148, 232] } },
+        { "dur": 1100, "pos": { "ball": [200, 158], "DFCL": [162, 215], "DFCR": [242, 215] } },
+        { "dur": 900,  "pos": { "ball": [155, 108], "LD": [332, 228], "MD": [328, 198], "DC2": [245, 172], "DFCR": [252, 232], "DFCL": [148, 232] } }
+      ]
+    }
+  },
+
+  {
+    "id": "contraataque-transicion-defensa-ataque",
+    "nombre": "Contraataque / transición defensa-ataque tras robo",
+    "categoria": "Ataque",
+    "fase": "Transicion",
+    "formacion": "4-3-3",
+    "descripcion": "La transición ofensiva es el momento más peligroso y el más difícil de defender en el fútbol moderno. Tras recuperar el balón en el mediocampo, el equipo que recupera tiene una ventana de 3-4 segundos donde el rival está desorganizado. El pivote juega rápido al extremo más adelantado, los delanteros hacen carreras en profundidad por los canales y el objetivo es llegar al área rival en 3 pases o menos.",
+    "objetivo": "Llegar al área rival en menos de 6 segundos y con máximo 3 pases desde el momento de recuperación del balón.",
+    "claves": [
+      "El jugador que recupera mira hacia delante antes de controlar.",
+      "El primer pase debe ser hacia el jugador más avanzado en el carril libre.",
+      "Los extremos abren en profundidad para estirar la defensa rival.",
+      "El delantero centro busca el carril entre los dos centrales rivales.",
+      "No se retiene el balón más de 2 toques en la transición."
+    ],
+    "animacion": {
+      "field": "full",
+      "label": "Contraataque 3 pases",
+      "players": [
+        { "id": "GK",    "start": [200, 248], "team": "GK", "label": "P"  },
+        { "id": "LI",    "start": [68,  218], "team": "A",  "label": "LI" },
+        { "id": "DFCL",  "start": [148, 225], "team": "A",  "label": "D"  },
+        { "id": "DFCR",  "start": [252, 225], "team": "A",  "label": "D"  },
+        { "id": "LD",    "start": [332, 218], "team": "A",  "label": "LD" },
+        { "id": "MCD",   "start": [200, 172], "team": "A",  "label": "MC" },
+        { "id": "EI",    "start": [68,  118], "team": "A",  "label": "EI" },
+        { "id": "DC",    "start": [200, 105], "team": "A",  "label": "DC" },
+        { "id": "ED",    "start": [332, 118], "team": "A",  "label": "ED" },
+        { "id": "GKR",   "start": [200,  12], "team": "B",  "label": "P"  },
+        { "id": "DFC1R", "start": [148,  92], "team": "B",  "label": "D"  },
+        { "id": "DFC2R", "start": [252,  92], "team": "B",  "label": "D"  },
+        { "id": "MCR1",  "start": [155, 150], "team": "B",  "label": "M"  },
+        { "id": "MCR2",  "start": [245, 150], "team": "B",  "label": "M"  }
+      ],
+      "cones": [],
+      "arrows": [
+        { "x1": 200, "y1": 168, "x2": 330, "y2": 102, "dashed": true, "color": "rgba(147,197,253,0.6)" }
+      ],
+      "zones": [],
+      "ballStart": [200, 168],
+      "scenes": [
+        { "dur": 1000, "pos": { "ball": [200, 168] } },
+        { "dur": 1100, "pos": { "ball": [332, 102], "MCR2": [270, 125] } },
+        { "dur": 1000, "pos": { "ball": [332, 60],  "ED": [332, 60], "DC": [255, 70], "EI": [68, 72] } },
+        { "dur": 1100, "pos": { "ball": [255, 60], "DFC2R": [255, 72] } },
+        { "dur": 900,  "pos": { "ball": [200, 22] } }
+      ]
+    }
+  },
+
+  {
+    "id": "ataque-posicional-superioridades",
+    "nombre": "Ataque posicional con superioridades (juego de posición)",
+    "categoria": "Posesion",
+    "fase": "Ataque posicional",
+    "formacion": "4-3-3",
+    "descripcion": "El juego de posición (Positional Play) busca crear superioridades numéricas locales en zonas estratégicas del campo mediante la circulación rápida de balón y el movimiento sin balón. El equipo se organiza en cinco carriles verticales y tres líneas horizontales. El objetivo es atraer la presión rival hacia un lado para crear el 3v2 o 2v1 en el lado contrario o por la espalda de las líneas rivales.",
+    "objetivo": "Crear una situación de 3v2 o 2v1 en zona de finalización mediante circulación de balón y movimientos de desdoblamiento.",
+    "claves": [
+      "El balón circula rápido para mover el bloque rival y abrir espacios.",
+      "Siempre debe haber un jugador entre las líneas rivales para recibir girado.",
+      "El lateral del lado del balón sube cuando el extremo se abre hacia el interior.",
+      "El pivote ofrece como opción de seguridad en cada posesión.",
+      "El cambio de orientación al lado contrario es la señal de ataque decisivo."
+    ],
+    "animacion": {
+      "field": "full",
+      "label": "Juego de posición 4-3-3",
+      "players": [
+        { "id": "GK",    "start": [200, 248], "team": "GK", "label": "P"  },
+        { "id": "LI",    "start": [68,  210], "team": "A",  "label": "LI" },
+        { "id": "DFCL",  "start": [148, 218], "team": "A",  "label": "D"  },
+        { "id": "DFCR",  "start": [252, 218], "team": "A",  "label": "D"  },
+        { "id": "LD",    "start": [332, 210], "team": "A",  "label": "LD" },
+        { "id": "MCD",   "start": [200, 168], "team": "A",  "label": "MC" },
+        { "id": "MCOL",  "start": [128, 148], "team": "A",  "label": "M"  },
+        { "id": "MCOR",  "start": [272, 148], "team": "A",  "label": "M"  },
+        { "id": "EI",    "start": [68,   98], "team": "A",  "label": "EI" },
+        { "id": "DC",    "start": [200,  82], "team": "A",  "label": "DC" },
+        { "id": "ED",    "start": [332,  98], "team": "A",  "label": "ED" },
+        { "id": "GKR",   "start": [200,  12], "team": "B",  "label": "P"  },
+        { "id": "LIR",   "start": [68,   48], "team": "B",  "label": "D"  },
+        { "id": "DFC1R", "start": [155,  55], "team": "B",  "label": "D"  },
+        { "id": "DFC2R", "start": [245,  55], "team": "B",  "label": "D"  },
+        { "id": "LDR",   "start": [332,  48], "team": "B",  "label": "D"  },
+        { "id": "MI_R",  "start": [75,  102], "team": "B",  "label": "M"  },
+        { "id": "MC1R",  "start": [155, 108], "team": "B",  "label": "M"  },
+        { "id": "MC2R",  "start": [245, 108], "team": "B",  "label": "M"  },
+        { "id": "MD_R",  "start": [325, 102], "team": "B",  "label": "M"  }
+      ],
+      "cones": [],
+      "arrows": [],
+      "zones": [
+        { "x": 264, "y": 55, "w": 126, "h": 100, "color": "rgba(59,130,246,0.08)" }
+      ],
+      "ballStart": [252, 218],
+      "scenes": [
+        { "dur": 1300, "pos": { "ball": [252, 218], "MCOR": [272, 178] } },
+        { "dur": 1100, "pos": { "ball": [272, 175], "ED": [340, 128], "LD": [348, 145] } },
+        { "dur": 1200, "pos": { "ball": [340, 98], "ED": [340, 98], "DC": [235, 72], "LDR": [340, 60] } },
+        { "dur": 1100, "pos": { "ball": [235, 65], "DFC2R": [255, 68] } },
+        { "dur": 1000, "pos": { "ball": [200, 28] } }
+      ]
+    }
+  },
+
+  {
+    "id": "gegenpressing-5-segundos",
+    "nombre": "Presión tras pérdida (gegenpressing) en 5 segundos",
+    "categoria": "Defensa",
+    "fase": "Presion",
+    "formacion": "4-3-3",
+    "descripcion": "El gegenpressing (contrapresión) es el concepto más identificativo del estilo de Jürgen Klopp. En los 3-5 segundos posteriores a la pérdida del balón, los jugadores más cercanos presionan de forma coordinada antes de que el rival pueda organizar el juego. La clave es que el jugador que pierde el balón es el primero en presionar, y los dos jugadores más cercanos cierran inmediatamente las líneas de pase del receptor.",
+    "objetivo": "Recuperar el balón en los primeros 5 segundos tras la pérdida mediante contrapresión de tres jugadores sobre el receptor.",
+    "claves": [
+      "El jugador que pierde el balón reacciona en menos de 1 segundo y presiona al receptor.",
+      "Los dos jugadores más cercanos cierran las líneas de pase del receptor.",
+      "Los jugadores más alejados NO persiguen; se reposicionan para el segundo balón.",
+      "Si no se recupera en 5 segundos, repliegue organizado a bloque medio.",
+      "Prohibido dar el pase largo: la primera opción siempre es presionar."
+    ],
+    "animacion": {
+      "field": "half_a",
+      "label": "Gegenpressing 5s",
+      "players": [
+        { "id": "MC1", "start": [200,  95], "team": "A", "label": "B" },
+        { "id": "MC2", "start": [118, 145], "team": "A", "label": "B" },
+        { "id": "MC3", "start": [282, 145], "team": "A", "label": "B" },
+        { "id": "EI",  "start": [65,  188], "team": "A", "label": "E" },
+        { "id": "ED",  "start": [335, 188], "team": "A", "label": "E" },
+        { "id": "DC",  "start": [200, 188], "team": "A", "label": "D" },
+        { "id": "R1",  "start": [200, 110], "team": "B", "label": "R" },
+        { "id": "R2",  "start": [148, 162], "team": "B", "label": "R" },
+        { "id": "R3",  "start": [252, 162], "team": "B", "label": "R" }
+      ],
+      "cones": [],
+      "arrows": [],
+      "zones": [],
+      "ballStart": [200, 112],
+      "scenes": [
+        { "dur": 900,  "pos": { "ball": [200, 112] } },
+        { "dur": 1100, "pos": { "ball": [200, 112], "MC1": [200, 118], "MC2": [165, 128], "MC3": [235, 128] } },
+        { "dur": 1000, "pos": { "MC2": [148, 148], "MC3": [252, 148], "MC1": [200, 115] } },
+        { "dur": 1200, "pos": { "ball": [200, 115], "MC1": [200, 112] } },
+        { "dur": 900,  "pos": { "ball": [200, 95], "MC1": [200, 95], "MC2": [118, 145], "MC3": [282, 145] } }
+      ]
+    }
+  },
+
+  {
+    "id": "basculacion-defensiva-bloque",
+    "nombre": "Basculación defensiva del bloque",
+    "categoria": "Defensa",
+    "fase": "Bloque defensivo",
+    "formacion": "4-4-2",
+    "descripcion": "La basculación es el movimiento colectivo del bloque defensivo hacia el lado donde está el balón. Cuando el rival cambia el juego hacia la banda contraria, todo el bloque se desplaza lateralmente de forma coordinada en menos de 3 segundos. El defensa más alejado del balón no persigue al extremo contrario: cierra el carril central. Los dos delanteros se mantienen escalonados para presionar la salida de balón.",
+    "objetivo": "Mantener la compacidad del bloque defensivo ante el cambio de juego rival, sin dejar espacio interior entre la línea de medios y la de defensas.",
+    "claves": [
+      "Al cambio de juego, el bloque bascule completo hacia el nuevo lado del balón.",
+      "El lateral del lado del balón cierra al extremo rival sin dejar línea de fondo.",
+      "El central más alejado del balón centra su posición para cortar el diagonal interior.",
+      "La línea de medios y la de defensas se mueven siempre juntas, sin separarse.",
+      "Los delanteros orientan la basculación presionando ligeramente al portador del balón."
+    ],
+    "animacion": {
+      "field": "full",
+      "label": "Basculación 4-4-2",
+      "players": [
+        { "id": "GK",   "start": [200, 248], "team": "GK", "label": "P"  },
+        { "id": "LI",   "start": [68,  220], "team": "A",  "label": "LI" },
+        { "id": "DFCL", "start": [148, 228], "team": "A",  "label": "D"  },
+        { "id": "DFCR", "start": [252, 228], "team": "A",  "label": "D"  },
+        { "id": "LD",   "start": [332, 220], "team": "A",  "label": "LD" },
+        { "id": "MI",   "start": [72,  182], "team": "A",  "label": "M"  },
+        { "id": "MC1",  "start": [148, 178], "team": "A",  "label": "MC" },
+        { "id": "MC2",  "start": [252, 178], "team": "A",  "label": "MC" },
+        { "id": "MD",   "start": [328, 182], "team": "A",  "label": "M"  },
+        { "id": "DC1",  "start": [155, 148], "team": "A",  "label": "DC" },
+        { "id": "DC2",  "start": [245, 148], "team": "A",  "label": "DC" },
+        { "id": "EIR",  "start": [55,  100], "team": "B",  "label": "E"  },
+        { "id": "MCR",  "start": [200,  88], "team": "B",  "label": "M"  },
+        { "id": "EDR",  "start": [345, 100], "team": "B",  "label": "E"  }
+      ],
+      "cones": [],
+      "arrows": [],
+      "zones": [],
+      "ballStart": [55, 100],
+      "scenes": [
+        { "dur": 1400, "pos": { "ball": [55, 100], "LI": [50, 205], "MI": [52, 168], "DC1": [108, 140], "DFCL": [122, 222] } },
+        { "dur": 1500, "pos": { "ball": [345, 100], "LD": [348, 205], "MD": [348, 168], "DC2": [295, 140], "DFCR": [278, 222], "LI": [68, 220], "MI": [72, 182], "DC1": [155, 148], "DFCL": [148, 228] } },
+        { "dur": 1300, "pos": { "ball": [200, 88], "LD": [332, 220], "MD": [328, 182], "DC2": [245, 148], "DFCR": [252, 228] } }
+      ]
+    }
+  },
+
+  {
+    "id": "corner-ofensivo-bloqueos",
+    "nombre": "Córner ofensivo con bloqueos",
+    "categoria": "Finalizacion",
+    "fase": "Balon parado",
+    "formacion": "Variable",
+    "descripcion": "Jugada de balón parado en córner con bloqueos coordinados al estilo de la NFL aplicados al fútbol. Dos jugadores realizan pantallas sobre los marcadores de los delanteros que van a rematar, liberándolos en el punto de primer palo y segundo palo. El tercer delantero espera fuera del área por si el portero rechaza. El ejecutor del córner elige entre el primer palo y el segundo palo según el movimiento del portero rival.",
+    "objetivo": "Liberar al menos un rematador en el punto del primer o segundo palo mediante bloqueos coordinados que neutralicen el marcaje individual rival.",
+    "claves": [
+      "Los bloqueadores (pantalleros) se colocan pegados al defensa rival justo antes del saque.",
+      "El movimiento de los rematadores debe iniciarse cuando el ejecutor toca el balón.",
+      "El rematador de primer palo hace un movimiento previo hacia dentro antes de romper al palo.",
+      "El rematador de segundo palo cruza por detrás de los bloqueadores para desmarcar.",
+      "El ejecutor siempre tiene dos opciones: el primer palo directo o el segundo palo bombeado."
+    ],
+    "animacion": {
+      "field": "box",
+      "label": "Córner con pantallas",
+      "players": [
+        { "id": "COR",  "start": [55,  62],  "team": "A",  "label": "C"  },
+        { "id": "BLK1", "start": [165, 138], "team": "A",  "label": "B"  },
+        { "id": "BLK2", "start": [200, 138], "team": "A",  "label": "B"  },
+        { "id": "R1",   "start": [165, 158], "team": "A",  "label": "DC" },
+        { "id": "R2",   "start": [242, 148], "team": "A",  "label": "DC" },
+        { "id": "R3",   "start": [200, 178], "team": "A",  "label": "M"  },
+        { "id": "GKR",  "start": [200,  80], "team": "B",  "label": "P"  },
+        { "id": "D1",   "start": [152, 102], "team": "B",  "label": "D"  },
+        { "id": "D2",   "start": [248, 102], "team": "B",  "label": "D"  },
+        { "id": "D3",   "start": [200, 122], "team": "B",  "label": "D"  }
+      ],
+      "cones": [],
+      "arrows": [],
+      "zones": [
+        { "x": 130, "y": 60, "w": 80, "h": 55, "color": "rgba(59,130,246,0.08)" }
+      ],
+      "ballStart": [55, 62],
+      "scenes": [
+        { "dur": 1200, "pos": { "ball": [55, 62] } },
+        { "dur": 1000, "pos": { "BLK1": [148, 108], "BLK2": [200, 128] } },
+        { "dur": 1100, "pos": { "R1": [148,  88], "R2": [255, 92] } },
+        { "dur": 1300, "pos": { "ball": [165, 95], "GKR": [200, 78] } },
+        { "dur": 900,  "pos": { "ball": [200, 82], "R3": [200, 110] } },
+        { "dur": 800,  "pos": { "ball": [55, 62], "R1": [165, 158], "R2": [242, 148], "R3": [200, 178], "BLK1": [165, 138], "BLK2": [200, 138], "GKR": [200, 80] } }
+      ]
+    }
+  },
+
+  {
+    "id": "falta-lateral-ofensiva-area",
+    "nombre": "Falta lateral ofensiva al área",
+    "categoria": "Finalizacion",
+    "fase": "Balon parado",
+    "formacion": "Variable",
+    "descripcion": "Jugada ensayada de falta lateral desde la banda ofensiva. El ejecutor centra al primer palo donde un delantero realiza un desmarque en curva hacia la portería. Un segundo delantero busca el segundo palo y un mediocampista se coloca en el punto de penalti para el segundo balón o el rechace del portero. Un cuarto jugador hace pantalla sobre el defensa del primer palo.",
+    "objetivo": "Conectar el centro de falta lateral con el rematador de primer palo mediante un desmarque en curva, con opciones de segundo palo y punto de penalti como alternativas.",
+    "claves": [
+      "El rematador de primer palo realiza un movimiento previo hacia atrás antes de romper al palo.",
+      "El bloqueador se coloca entre el rematador de primer palo y su marcador rival.",
+      "El rematador de segundo palo cruza en diagonal para dificultar el marcaje.",
+      "El ejecutor centra con efecto hacia la portería (in-swinger desde la derecha).",
+      "El jugador del punto de penalti espera fuera del área para el rechace del portero."
+    ],
+    "animacion": {
+      "field": "half_a",
+      "label": "Falta lateral al área",
+      "players": [
+        { "id": "FK1", "start": [42,  162], "team": "A",  "label": "F"  },
+        { "id": "BLK", "start": [172, 202], "team": "A",  "label": "B"  },
+        { "id": "R1",  "start": [158, 218], "team": "A",  "label": "DC" },
+        { "id": "R2",  "start": [242, 222], "team": "A",  "label": "DC" },
+        { "id": "R3",  "start": [200, 208], "team": "A",  "label": "M"  },
+        { "id": "EDF", "start": [318, 175], "team": "A",  "label": "E"  },
+        { "id": "GKR", "start": [200, 248], "team": "B",  "label": "P"  },
+        { "id": "D1",  "start": [162, 228], "team": "B",  "label": "D"  },
+        { "id": "D2",  "start": [248, 228], "team": "B",  "label": "D"  },
+        { "id": "D3",  "start": [200, 222], "team": "B",  "label": "D"  }
+      ],
+      "cones": [],
+      "arrows": [
+        { "x1": 52, "y1": 162, "x2": 168, "y2": 222, "dashed": true, "color": "rgba(245,158,11,0.75)" }
+      ],
+      "zones": [
+        { "x": 115, "y": 195, "w": 90, "h": 60, "color": "rgba(59,130,246,0.07)" }
+      ],
+      "ballStart": [42, 162],
+      "scenes": [
+        { "dur": 1200, "pos": { "ball": [42, 162] } },
+        { "dur": 1000, "pos": { "R1": [158, 235], "R2": [242, 235], "BLK": [168, 228] } },
+        { "dur": 1100, "pos": { "R1": [148, 228], "R2": [255, 228], "R3": [200, 215], "BLK": [162, 228] } },
+        { "dur": 1300, "pos": { "ball": [162, 225], "R1": [148, 225] } },
+        { "dur": 900,  "pos": { "ball": [200, 248], "GKR": [200, 245] } },
+        { "dur": 800,  "pos": { "ball": [42, 162], "R1": [158, 218], "R2": [242, 222], "R3": [200, 208], "BLK": [172, 202], "GKR": [200, 248] } }
+      ]
+    }
+  }
+]
