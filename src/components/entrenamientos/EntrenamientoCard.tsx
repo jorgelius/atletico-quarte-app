@@ -22,16 +22,6 @@ const LABEL_CAT: Record<string, string> = {
   otros:        'Otros',
 };
 
-const LABEL_NIVEL: Record<string, string> = {
-  prebenjamin: 'Pre-Benjamín',
-  benjamin:    'Benjamín',
-  alevin:      'Alevín',
-  infantil:    'Infantil',
-  cadete:      'Cadete',
-  juvenil:     'Juvenil',
-  senior:      'Sénior',
-  todos:       'Todas',
-};
 
 interface Props {
   item: Entrenamiento;
@@ -72,7 +62,6 @@ export default function EntrenamientoCard({ item, isFav, onOpen, onToggleFav, re
       <div className="flex items-center gap-3 text-xs text-gray-500">
         <span className="flex items-center gap-1"><Clock size={12}/> {item.duracion_min} min</span>
         <span className="flex items-center gap-1"><Users size={12}/> {item.num_jugadores_min}–{item.num_jugadores_max} jug.</span>
-        <span className="ml-auto">{LABEL_NIVEL[item.nivel] ?? item.nivel}</span>
       </div>
 
       {/* Indicador de asistencia */}

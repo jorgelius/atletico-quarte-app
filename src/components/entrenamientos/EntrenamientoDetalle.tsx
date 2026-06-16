@@ -2,6 +2,8 @@
 import { ArrowLeft, Star, Clock, Users, Package, Edit2, Trash2 } from 'lucide-react';
 import type { Entrenamiento } from '@/types';
 import PitchBoard from '@/components/pizarra/PitchBoard';
+import DrillAnimator from '@/components/entrenamientos/DrillAnimator';
+import { DRILLS } from '@/data/drillAnimations';
 
 interface Props {
   item:        Entrenamiento;
@@ -42,6 +44,16 @@ export default function EntrenamientoDetalle({ item, isFav, canEdit, onBack, onT
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 max-w-lg mx-auto w-full flex flex-col gap-4">
+        {/* Animación táctica */}
+        {DRILLS[item.id] && (
+          <div className="card p-3">
+            <p className="font-titulo font-bold text-xs text-gray-400 uppercase tracking-wide mb-2">
+              Animación táctica
+            </p>
+            <DrillAnimator drillId={item.id} />
+          </div>
+        )}
+
         {/* Fotos */}
         {item.fotos_b64.length > 0 && (
           <div className="flex gap-2 overflow-x-auto scrollbar-hide">
