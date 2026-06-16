@@ -1,9 +1,9 @@
 // ============================================================
 // EntrenamientosPage — Fase 4 completa
-// Tabs: Biblioteca | Sugeridos | Favoritos | Mis ejercicios
+// Tabs: Biblioteca | Favoritos | Mis ejercicios
 // ============================================================
 import { useEffect, useState } from 'react';
-import { Dumbbell, Plus, Star, BookOpen, ThumbsUp, User } from 'lucide-react';
+import { Dumbbell, Plus, Star, BookOpen, User } from 'lucide-react';
 import { usePerfilStore } from '@/stores/perfilStore';
 import { useEntrenamientosStore } from '@/stores/entrenamientosStore';
 import EntrenamientoCard from '@/components/entrenamientos/EntrenamientoCard';
@@ -12,7 +12,7 @@ import EntrenamientoForm from '@/components/entrenamientos/EntrenamientoForm';
 import FiltrosBar from '@/components/entrenamientos/FiltrosBar';
 import type { Entrenamiento } from '@/types';
 
-type Tab = 'biblioteca' | 'sugeridos' | 'favoritos' | 'mios';
+type Tab = 'biblioteca' | 'favoritos' | 'mios';
 type View = { mode: 'list' } | { mode: 'detail'; id: string } | { mode: 'form'; item?: Entrenamiento };
 
 export default function EntrenamientosPage() {
@@ -31,7 +31,6 @@ export default function EntrenamientosPage() {
   // Filtra según tab activo
   const filteredItems = (() => {
     let base = store.items;
-    if (tab === 'sugeridos') base = base.filter(e => e.es_sugerido);
     if (tab === 'favoritos') base = base.filter(e => store.isFav(e.id));
     if (tab === 'mios')      base = base.filter(e => e.author_id === perfil.id);
 
@@ -74,10 +73,9 @@ export default function EntrenamientosPage() {
 
   // ── Vista de lista ──
   const tabs = [
-    { id: 'biblioteca', icon: <BookOpen size={14}/>,  label: 'Todo' },
-    { id: 'sugeridos',  icon: <ThumbsUp size={14}/>,  label: 'Club' },
-    { id: 'favoritos',  icon: <Star size={14}/>,       label: 'Favs' },
-    { id: 'mios',       icon: <User size={14}/>,       label: 'Míos' },
+    { id: 'biblioteca', icon: <BookOpen size={14}/>, label: 'Todo' },
+    { id: 'favoritos',  icon: <Star size={14}/>,     label: 'Favs' },
+    { id: 'mios',       icon: <User size={14}/>,     label: 'Míos' },
   ] as const;
 
   return (

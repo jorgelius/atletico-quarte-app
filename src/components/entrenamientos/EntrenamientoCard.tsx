@@ -12,6 +12,27 @@ const COLOR_CAT: Record<string, string> = {
   otros:        'bg-gray-100 text-gray-600',
 };
 
+const LABEL_CAT: Record<string, string> = {
+  ataque:       'Ataque',
+  defensa:      'Defensa',
+  porteros:     'Porteros',
+  posesion:     'Posesión',
+  finalizacion: 'Finalización',
+  fisico:       'Físico',
+  otros:        'Otros',
+};
+
+const LABEL_NIVEL: Record<string, string> = {
+  prebenjamin: 'Pre-Benjamín',
+  benjamin:    'Benjamín',
+  alevin:      'Alevín',
+  infantil:    'Infantil',
+  cadete:      'Cadete',
+  juvenil:     'Juvenil',
+  senior:      'Sénior',
+  todos:       'Todas',
+};
+
 interface Props {
   item: Entrenamiento;
   isFav: boolean;
@@ -37,12 +58,8 @@ export default function EntrenamientoCard({ item, isFav, onOpen, onToggleFav, re
           <div className="flex items-center gap-2 flex-wrap mb-1">
             <span className={`text-[10px] px-2 py-0.5 rounded-full font-titulo font-bold uppercase
                               ${COLOR_CAT[item.categoria] ?? COLOR_CAT.otros}`}>
-              {item.categoria}
+              {LABEL_CAT[item.categoria] ?? item.categoria}
             </span>
-            {item.es_sugerido && (
-              <span className="text-[10px] px-2 py-0.5 rounded-full font-titulo font-bold
-                               bg-quarte-azulClaro text-quarte-azul">⭐ Sugerido</span>
-            )}
           </div>
           <p className="font-titulo font-bold text-quarte-negro text-sm line-clamp-2">{item.titulo}</p>
         </div>
@@ -55,7 +72,7 @@ export default function EntrenamientoCard({ item, isFav, onOpen, onToggleFav, re
       <div className="flex items-center gap-3 text-xs text-gray-500">
         <span className="flex items-center gap-1"><Clock size={12}/> {item.duracion_min} min</span>
         <span className="flex items-center gap-1"><Users size={12}/> {item.num_jugadores_min}–{item.num_jugadores_max} jug.</span>
-        <span className="ml-auto capitalize">{item.nivel}</span>
+        <span className="ml-auto">{LABEL_NIVEL[item.nivel] ?? item.nivel}</span>
       </div>
 
       {/* Indicador de asistencia */}
