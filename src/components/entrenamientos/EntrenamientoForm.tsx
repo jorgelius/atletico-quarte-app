@@ -5,7 +5,6 @@ import type { Entrenamiento, CategoriaEntrenamiento, NivelEdad, FormatoPartido }
 import PitchBoard, { type PitchBoardHandle } from '@/components/pizarra/PitchBoard';
 
 const CATEGORIAS: CategoriaEntrenamiento[] = ['ataque','defensa','porteros','posesion','finalizacion','fisico','otros'];
-const NIVELES: NivelEdad[] = ['todos','prebenjamin','benjamin','alevin','infantil','cadete','juvenil','senior'];
 
 function fileAB64(f: File): Promise<string> {
   return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result as string); r.onerror = rej; r.readAsDataURL(f); });
@@ -101,12 +100,6 @@ export default function EntrenamientoForm({ inicial, authorId, canSugerir, onGua
             ))}
           </div>
 
-          {/* Nivel */}
-          <select value={nivel} onChange={e => setNivel(e.target.value as NivelEdad)}
-            className="w-full px-3 py-2.5 rounded-xl border-2 border-gray-200 focus:border-quarte-azul
-                       outline-none text-sm font-cuerpo capitalize">
-            {NIVELES.map(n => <option key={n} value={n} className="capitalize">{n === 'todos' ? 'Todas las edades' : n}</option>)}
-          </select>
         </div>
 
         {/* Métricas */}

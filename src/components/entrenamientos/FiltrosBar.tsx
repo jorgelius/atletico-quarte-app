@@ -2,8 +2,6 @@ import { Search, X } from 'lucide-react';
 import type { FiltroEntrenamiento } from '@/data';
 
 const CATEGORIAS = ['ataque','defensa','porteros','posesion','finalizacion','fisico','otros'];
-const NIVELES    = ['todos','prebenjamin','benjamin','alevin','infantil','cadete','juvenil','senior'];
-
 interface Props {
   filtro: FiltroEntrenamiento;
   onChange: (f: Partial<FiltroEntrenamiento>) => void;
@@ -44,16 +42,6 @@ export default function FiltrosBar({ filtro, onChange }: Props) {
         ))}
       </div>
 
-      {/* Chips de nivel */}
-      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
-        {NIVELES.map(n => (
-          <button key={n} onClick={() => onChange({ nivel: filtro.nivel === n ? undefined : n })}
-            className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-titulo font-semibold capitalize transition-colors
-              ${filtro.nivel === n ? 'bg-quarte-verde text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
-            {n === 'todos' ? 'Todas las edades' : n}
-          </button>
-        ))}
-      </div>
     </div>
   );
 }
