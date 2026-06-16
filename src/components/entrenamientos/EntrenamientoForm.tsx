@@ -21,7 +21,7 @@ interface Props {
 export default function EntrenamientoForm({ inicial, authorId, canSugerir, onGuardar, onCancelar }: Props) {
   const [titulo,     setTitulo]    = useState(inicial?.titulo ?? '');
   const [categoria,  setCat]       = useState<CategoriaEntrenamiento>(inicial?.categoria ?? 'otros');
-  const [nivel,      setNivel]     = useState<NivelEdad>(inicial?.nivel ?? 'todos');
+  const nivel: NivelEdad = inicial?.nivel ?? 'todos';
   const [duracion,   setDuracion]  = useState(inicial?.duracion_min ?? 20);
   const [jugMin,     setJugMin]    = useState(inicial?.num_jugadores_min ?? 6);
   const [jugMax,     setJugMax]    = useState(inicial?.num_jugadores_max ?? 12);
