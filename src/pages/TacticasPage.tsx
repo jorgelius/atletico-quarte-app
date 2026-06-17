@@ -4,12 +4,14 @@
 import { useEffect, useState, useRef } from 'react';
 import {
   LayoutGrid, Plus, Star, ArrowLeft,
-  Edit2, Trash2, Save, Loader2, Camera, BookOpen, ThumbsUp, User,
+  Edit2, Trash2, Save, Loader2, Camera, BookOpen, ThumbsUp, User, Play, ListOrdered,
 } from 'lucide-react';
 import { usePerfilStore } from '@/stores/perfilStore';
 import { useTacticasStore } from '@/stores/tacticasStore';
 import { getFormatoEquipo } from '@/data/equipos';
 import PitchBoard, { type PitchBoardHandle } from '@/components/pizarra/PitchBoard';
+import DrillAnimator from '@/components/entrenamientos/DrillAnimator';
+import { DRILLS } from '@/data/drillAnimations';
 import type { Tactica, TipoTactica, FormatoPartido } from '@/types';
 
 type Tab  = 'todo' | 'sugeridos' | 'favoritos' | 'mios';
@@ -23,6 +25,14 @@ const COLOR_TIPO: Record<string, string> = {
   salida_balon:  'bg-green-100 text-green-700',
   transicion:    'bg-purple-100 text-purple-700',
   otros:         'bg-gray-100 text-gray-600',
+};
+const STRIPE_TIPO: Record<string, string> = {
+  sistema:       'bg-blue-500',
+  balon_parado:  'bg-yellow-500',
+  presion:       'bg-red-500',
+  salida_balon:  'bg-green-500',
+  transicion:    'bg-purple-500',
+  otros:         'bg-gray-400',
 };
 
 function fileAB64(f: File): Promise<string> {
@@ -196,6 +206,17 @@ function TacticaDetalle({ item, isFav, canEdit, onBack, onToggleFav, onEdit, onB
         )}
       </div>
       <div className="flex-1 overflow-y-auto p-4 max-w-lg mx-auto w-full flex flex-col gap-4">
+
+        {/* Animación táctica */}
+        {DRILLS[item.id] && (
+          <div>
+            <p className="font-titulo font-bold text-sm text-quarte-negro mb-2 flex items-center gap-1.5">
+              <Play size={14} className="text-quarte-verde" /> Pizarra animada
+            </p>
+            <DrillAnimator drillId={item.id} />
+          </div>
+        )}
+
         {item.fotos_b64.length > 0 && (
           <div className="flex gap-2 overflow-x-auto scrollbar-hide">
             {item.fotos_b64.map((f, i) => <img key={i} src={f} alt="" className="h-36 rounded-xl object-cover flex-shrink-0" />)}
@@ -206,7 +227,9 @@ function TacticaDetalle({ item, isFav, canEdit, onBack, onToggleFav, onEdit, onB
         )}
         {item.instrucciones.length > 0 && (
           <div className="card">
-            <p className="font-titulo font-bold text-sm mb-3">Ejecución</p>
+            <p className="font-titulo font-bold text-sm mb-3 flex items-center gap-1.5">
+              <ListOrdered size={14} className="text-quarte-verde" /> Claves de ejecución
+            </p>
             <ol className="flex flex-col gap-3">
               {item.instrucciones.map((inst, i) => (
                 <li key={i} className="flex gap-3">
@@ -219,7 +242,7 @@ function TacticaDetalle({ item, isFav, canEdit, onBack, onToggleFav, onEdit, onB
         )}
         {item.pizarra_data && (
           <div>
-            <p className="font-titulo font-bold text-sm text-quarte-negro mb-2">Pizarra</p>
+            <p className="font-titulo font-bold text-sm text-quarte-negro mb-2">Pizarra libre</p>
             <PitchBoard formato={item.formato} readOnly initialData={item.pizarra_data} />
           </div>
         )}
@@ -306,34 +329,77 @@ export default function TacticasPage() {
       <div className="flex-1 overflow-y-auto p-4 max-w-lg mx-auto w-full">
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center py-16 text-gray-400 gap-3">
-            <LayoutGrid size={48} className="opacity-20" />
+            <svg width="80" height="80" viewBox="0 0 80 80" fill="none" className="opacity-25">
+              <rect x="8" y="8" width="64" height="64" rx="12" stroke="currentColor" strokeWidth="2.5"/>
+              <line x1="8" y1="32" x2="72" y2="32" stroke="currentColor" strokeWidth="2"/>
+              <circle cx="28" cy="52" r="6" stroke="currentColor" strokeWidth="2"/>
+              <line x1="40" y1="48" x2="64" y2="48" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              <line x1="40" y1="56" x2="56" y2="56" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              <circle cx="40" cy="20" r="4" fill="currentColor"/>
+              <line x1="30" y1="20" x2="22" y2="20" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              <line x1="50" y1="20" x2="58" y2="20" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
             <p className="font-titulo font-semibold">Sin tácticas aquí</p>
             <p className="text-sm text-center">Crea la primera pulsando +</p>
           </div>
         ) : (
-          <div className="grid gap-3">
-            {filtered.map(item => (
-              <button key={item.id} onClick={() => setView({ mode:'detail', id: item.id })}
-                className="card text-left flex items-start gap-3 active:scale-[0.98] transition-transform w-full">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap mb-1">
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-titulo font-bold capitalize
-                                      ${COLOR_TIPO[item.tipo] ?? COLOR_TIPO.otros}`}>
-                      {item.tipo.replace('_',' ')}
-                    </span>
-                    <span className="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full font-titulo font-bold">
-                      {item.formato}
-                    </span>
-                    {item.es_sugerido && <span className="text-[10px] bg-quarte-azulClaro text-quarte-azul px-2 py-0.5 rounded-full font-titulo font-bold">⭐</span>}
+          <div className="flex flex-col gap-3">
+            {filtered.map(item => {
+              const hasAnim = Boolean(DRILLS[item.id]);
+              const isFav   = store.isFav(item.id);
+              return (
+                <button key={item.id} onClick={() => setView({ mode:'detail', id: item.id })}
+                  className="bg-white rounded-2xl shadow-sm text-left flex items-stretch overflow-hidden
+                             active:scale-[0.98] transition-transform w-full border border-gray-100">
+                  {/* Stripe lateral por tipo */}
+                  <div className={`w-1 flex-shrink-0 ${STRIPE_TIPO[item.tipo] ?? STRIPE_TIPO.otros}`} />
+
+                  <div className="flex-1 min-w-0 p-3 flex flex-col gap-1.5">
+                    {/* Badges superiores */}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-titulo font-bold capitalize
+                                        ${COLOR_TIPO[item.tipo] ?? COLOR_TIPO.otros}`}>
+                        {item.tipo.replace('_',' ')}
+                      </span>
+                      <span className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full font-titulo font-bold">
+                        {item.formato}
+                      </span>
+                      {item.es_sugerido && (
+                        <span className="text-[10px] bg-amber-50 text-amber-600 px-2 py-0.5 rounded-full font-titulo font-bold">
+                          ⭐ Club
+                        </span>
+                      )}
+                      {hasAnim && (
+                        <span className="text-[10px] bg-quarte-verde/10 text-quarte-verde px-2 py-0.5 rounded-full font-titulo font-bold flex items-center gap-0.5">
+                          <Play size={8} /> Animada
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Título */}
+                    <p className="font-titulo font-bold text-sm text-quarte-negro leading-snug line-clamp-2">
+                      {item.titulo}
+                    </p>
+
+                    {/* Claves count */}
+                    {item.instrucciones.length > 0 && (
+                      <p className="text-[11px] text-gray-400 font-cuerpo flex items-center gap-1">
+                        <ListOrdered size={11} />
+                        {item.instrucciones.length} claves de ejecución
+                      </p>
+                    )}
                   </div>
-                  <p className="font-titulo font-bold text-sm text-quarte-negro line-clamp-2">{item.titulo}</p>
-                </div>
-                <button onClick={e => { e.stopPropagation(); store.toggleFav(perfil!.id, item.id); }}
-                  className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-yellow-50 flex-shrink-0">
-                  <Star size={16} fill={store.isFav(item.id) ? '#F59E0B' : 'none'} stroke={store.isFav(item.id) ? '#F59E0B' : '#9CA3AF'} />
+
+                  {/* Acción fav */}
+                  <div className="flex items-center pr-3 pl-1">
+                    <button onClick={e => { e.stopPropagation(); store.toggleFav(perfil!.id, item.id); }}
+                      className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-yellow-50">
+                      <Star size={16} fill={isFav ? '#F59E0B' : 'none'} stroke={isFav ? '#F59E0B' : '#D1D5DB'} />
+                    </button>
+                  </div>
                 </button>
-              </button>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
