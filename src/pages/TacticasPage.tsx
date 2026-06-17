@@ -14,7 +14,7 @@ import DrillAnimator from '@/components/entrenamientos/DrillAnimator';
 import { DRILLS } from '@/data/drillAnimations';
 import type { Tactica, TipoTactica, FormatoPartido } from '@/types';
 
-type Tab  = 'todo' | 'sugeridos' | 'favoritos' | 'mios';
+type Tab  = 'todo' | 'favoritos' | 'mios';
 type View = { mode: 'list' } | { mode: 'detail'; id: string } | { mode: 'form'; item?: Tactica };
 
 const TIPOS: TipoTactica[] = ['sistema','balon_parado','presion','salida_balon','transicion','otros'];
@@ -269,7 +269,6 @@ export default function TacticasPage() {
 
   const filtered = (() => {
     let base = store.items.filter(t => t.es_sugerido || t.formato === formatoEquipo);
-    if (tab === 'sugeridos') base = base.filter(t => t.es_sugerido);
     if (tab === 'favoritos') base = base.filter(t => store.isFav(t.id));
     if (tab === 'mios')      base = base.filter(t => t.author_id === teamId);
     return base.sort((a, b) => b.creado_en - a.creado_en);
@@ -293,7 +292,6 @@ export default function TacticasPage() {
 
   const tabs = [
     { id: 'todo',      icon: <BookOpen size={14}/>,  label: 'Todo' },
-    { id: 'sugeridos', icon: <ThumbsUp size={14}/>,  label: 'Club' },
     { id: 'favoritos', icon: <Star size={14}/>,       label: 'Favs' },
     { id: 'mios',      icon: <User size={14}/>,       label: 'Míos' },
   ] as const;
@@ -361,19 +359,6 @@ export default function TacticasPage() {
                                         ${COLOR_TIPO[item.tipo] ?? COLOR_TIPO.otros}`}>
                         {item.tipo.replace('_',' ')}
                       </span>
-                      <span className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full font-titulo font-bold">
-                        {item.formato}
-                      </span>
-                      {item.es_sugerido && (
-                        <span className="text-[10px] bg-amber-50 text-amber-600 px-2 py-0.5 rounded-full font-titulo font-bold">
-                          ⭐ Club
-                        </span>
-                      )}
-                      {hasAnim && (
-                        <span className="text-[10px] bg-quarte-verde/10 text-quarte-verde px-2 py-0.5 rounded-full font-titulo font-bold flex items-center gap-0.5">
-                          <Play size={8} /> Animada
-                        </span>
-                      )}
                     </div>
 
                     {/* Título */}
