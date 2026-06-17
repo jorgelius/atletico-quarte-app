@@ -4,7 +4,7 @@
 import { useEffect, useState, useRef } from 'react';
 import {
   LayoutGrid, Plus, Star, ArrowLeft,
-  Edit2, Trash2, Save, Loader2, Camera, BookOpen, ThumbsUp, User, Play, ListOrdered,
+  Edit2, Trash2, Save, Loader2, Camera, BookOpen, User, Play, ListOrdered,
 } from 'lucide-react';
 import { usePerfilStore } from '@/stores/perfilStore';
 import { useTacticasStore } from '@/stores/tacticasStore';
@@ -343,8 +343,7 @@ export default function TacticasPage() {
         ) : (
           <div className="flex flex-col gap-3">
             {filtered.map(item => {
-              const hasAnim = Boolean(DRILLS[item.id]);
-              const isFav   = store.isFav(item.id);
+              const isFav = store.isFav(item.id);
               return (
                 <button key={item.id} onClick={() => setView({ mode:'detail', id: item.id })}
                   className="bg-white rounded-2xl shadow-sm text-left flex items-stretch overflow-hidden
