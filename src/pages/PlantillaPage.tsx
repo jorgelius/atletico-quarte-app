@@ -3,7 +3,7 @@
 // Tabs: Alineación | Jugadores
 // ============================================================
 import { useEffect, useRef, useState } from 'react';
-import { Users, Save, Download, Trash2, ChevronDown, ClipboardList, CheckCircle2, XCircle } from 'lucide-react';
+import { Users, Save, Download, Trash2, ChevronDown, ClipboardList, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import Konva from 'konva';
 import { usePerfilStore } from '@/stores/perfilStore';
 import { usePlantillaStore } from '@/stores/plantillaStore';
@@ -31,10 +31,9 @@ export default function PlantillaPage() {
   const stageRef         = useRef<Konva.Stage | null>(null);
   const [tab, setTab] = useState<Tab>('alineacion');
   const [modalSlot, setModal]   = useState<number | null>(null);
-  const [showGuardar, setShowG] = useState(false);
-  const [nombreAlin, setNombreA] = useState('');
   const [showCargar, setShowC]  = useState(false);
   const [showFmt, setShowFmt]   = useState(false);
+  const [guardando, setGuardando] = useState(false);
   const [toast, setToast] = useState<{ tipo: 'ok' | 'error'; msg: string } | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -76,17 +75,18 @@ export default function PlantillaPage() {
     toastTimer.current = setTimeout(() => setToast(null), 3000);
   }
 
-  // ── Guardar alineación ──
+  // ── Guardar alineación (un solo clic, sin nombre) ──
   async function handleGuardar() {
-    if (!nombreAlin.trim() || !activeTeamId) return;
+    if (!activeTeamId || guardando) return;
+    setGuardando(true);
     try {
-      await store.guardarAlineacion(activeTeamId, nombreAlin.trim());
-      setShowG(false);
-      setNombreA('');
-      showToast('ok', `"${nombreAlin.trim()}" guardada`);
+      await store.guardarAlineacion(activeTeamId, 'Plantilla activa');
+      showToast('ok', 'Plantilla guardada');
     } catch (e) {
-      showToast('error', 'No se pudo guardar. Revisa la consola.');
+      showToast('error', 'Error al guardar — revisa la consola');
       console.error(e);
+    } finally {
+      setGuardando(false);
     }
   }
 
@@ -217,39 +217,21 @@ export default function PlantillaPage() {
               </div>
             </div>
 
-            {/* Acciones de alineación */}
-            <div className="flex gap-2">
-              <button onClick={() => setShowG(v => !v)}
-                className="btn-secundario flex-1 flex items-center justify-center gap-2 text-sm">
-                <Save size={16} /> Guardar
-              </button>
-              <button onClick={() => setShowC(v => !v)}
-                className="btn-outline flex-1 text-sm">
-                Cargar
-              </button>
-            </div>
+            {/* Guardar plantilla — un solo clic */}
+            <button onClick={handleGuardar} disabled={guardando}
+              className="btn-secundario w-full flex items-center justify-center gap-2 text-sm">
+              {guardando
+                ? <Loader2 size={16} className="animate-spin" />
+                : <Save size={16} />}
+              {guardando ? 'Guardando…' : 'Guardar plantilla'}
+            </button>
 
-            {/* Formulario guardar */}
-            {showGuardar && (
-              <div className="card flex flex-col gap-3">
-                <p className="font-titulo font-bold text-sm text-quarte-negro">Guardar alineación</p>
-                <input value={nombreAlin} onChange={e => setNombreA(e.target.value)}
-                  placeholder="Nombre (ej: vs Real Zaragoza)"
-                  className="w-full px-3 py-2.5 rounded-xl border-2 border-gray-200
-                             focus:border-quarte-azul outline-none text-sm font-cuerpo" />
-                <div className="flex gap-2">
-                  <button onClick={() => setShowG(false)} className="btn-outline flex-1 text-sm">Cancelar</button>
-                  <button onClick={handleGuardar} className="btn-primario flex-1 text-sm">Guardar</button>
-                </div>
-              </div>
-            )}
-
-            {/* Lista alineaciones guardadas */}
+            {/* Lista alineaciones guardadas (por si hay más de una) */}
             {showCargar && (
               <div className="card flex flex-col gap-2">
-                <p className="font-titulo font-bold text-sm text-quarte-negro">Alineaciones guardadas</p>
+                <p className="font-titulo font-bold text-sm text-quarte-negro">Versiones guardadas</p>
                 {store.alineacionesGuardadas.length === 0 && (
-                  <p className="text-sm text-gray-400">Sin alineaciones guardadas.</p>
+                  <p className="text-sm text-gray-400">Sin versiones guardadas.</p>
                 )}
                 {store.alineacionesGuardadas.map(a => (
                   <div key={a.id} className="flex items-center gap-3 bg-gray-50 rounded-xl px-3 py-2">
