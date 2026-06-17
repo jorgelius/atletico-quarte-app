@@ -104,23 +104,31 @@ export const usePlantillaStore = create<PlantillaState>((set, get) => ({
       const activeFormacion = lastAlin.formacion;
       const slots = buildSlots(activeFormato, activeFormacion);
 
-      // Colocar titulares guardados en sus posiciones
+      // Restaurar posiciones: primero por slot_idx exacto (nueva versión),
+      // luego por coordenadas aproximadas (compatibilidad con registros antiguos)
+      const assignedIds = new Set<string>();
       lastAlin.posiciones.forEach(p => {
-        const slot = slots.find(s =>
-          s.esTitular &&
-          Math.abs(s.x - p.x) < 0.05 &&
-          Math.abs(s.y - p.y) < 0.05
-        );
-        if (slot) slot.jugadorId = p.jugador_id;
+        let slot: SlotJugador | undefined;
+        if (p.slot_idx !== undefined) {
+          slot = slots.find(s => s.slotIdx === p.slot_idx);
+        } else {
+          slot = slots.find(s =>
+            s.esTitular &&
+            Math.abs(s.x - p.x) < 0.05 &&
+            Math.abs(s.y - p.y) < 0.05,
+          );
+        }
+        if (slot) {
+          slot.jugadorId = p.jugador_id;
+          assignedIds.add(p.jugador_id);
+        }
       });
 
-      // Rellenar banquillo con jugadores no titulares
-      const enCampoIds = new Set(lastAlin.posiciones.map(p => p.jugador_id));
-      const enBanquillo = jugadores.filter(j => !enCampoIds.has(j.id));
-      const numTit = getNumTitulares(activeFormato);
-      enBanquillo.forEach((j, i) => {
-        const idx = numTit + i;
-        if (idx < slots.length) slots[idx].jugadorId = j.id;
+      // Jugadores nuevos (no guardados en la alineación) → primer hueco en banquillo
+      const sinAsignar = jugadores.filter(j => !assignedIds.has(j.id));
+      const huecosBanq = slots.filter(s => !s.esTitular && !s.jugadorId);
+      sinAsignar.forEach((j, i) => {
+        if (i < huecosBanq.length) huecosBanq[i].jugadorId = j.id;
       });
 
       set({ jugadores, alineacionesGuardadas: alineaciones, slots,
@@ -212,10 +220,19 @@ export const usePlantillaStore = create<PlantillaState>((set, get) => ({
 
   guardarAlineacion: async (ownerId, nombre) => {
     const { formato, formacion, slots, alineacionesGuardadas } = get();
-    const numTit = getNumTitulares(formato);
-    const posiciones = slots.slice(0, numTit)
-      .filter(s => s.jugadorId)
-      .map(s => ({ jugador_id: s.jugadorId!, x: s.x, y: s.y, en_campo: true }));
+
+    // Guardar TODOS los slots asignados (titulares + banquillo) con slot_idx exacto
+    const posiciones = slots
+      .filter(s => s.jugadorId !== null)
+      .map(s => ({
+        jugador_id: s.jugadorId!,
+        x: s.x,
+        y: s.y,
+        en_campo: s.esTitular,
+        slot_idx: s.slotIdx,
+      }));
+
+    console.log('[guardarAlineacion] Guardando', posiciones.length, 'jugadores (', posiciones.filter(p => p.en_campo).length, 'en campo)');
 
     const existing = alineacionesGuardadas.find(a => a.nombre === nombre);
     const a: Alineacion = {
@@ -230,6 +247,7 @@ export const usePlantillaStore = create<PlantillaState>((set, get) => ({
     };
     // Lanza excepción si Supabase falla (check() en RemoteDataProvider ya hace throw)
     await dataProvider.saveAlineacion(a);
+    console.log('[guardarAlineacion] Guardado en Supabase OK, id:', a.id);
     set(s => ({
       alineacionesGuardadas: existing
         ? s.alineacionesGuardadas.map(x => x.id === a.id ? a : x)

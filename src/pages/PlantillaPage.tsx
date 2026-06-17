@@ -72,19 +72,25 @@ export default function PlantillaPage() {
   function showToast(tipo: 'ok' | 'error', msg: string) {
     if (toastTimer.current) clearTimeout(toastTimer.current);
     setToast({ tipo, msg });
-    toastTimer.current = setTimeout(() => setToast(null), 3000);
+    toastTimer.current = setTimeout(() => setToast(null), 5000);
   }
 
   // ── Guardar alineación (un solo clic, sin nombre) ──
   async function handleGuardar() {
-    if (!activeTeamId || guardando) return;
+    console.log('[handleGuardar] click — activeTeamId:', activeTeamId, 'guardando:', guardando);
+    if (!activeTeamId) {
+      showToast('error', 'Sin equipo activo — selecciona un equipo');
+      return;
+    }
+    if (guardando) return;
     setGuardando(true);
     try {
       await store.guardarAlineacion(activeTeamId, 'Plantilla activa');
-      showToast('ok', 'Plantilla guardada');
+      showToast('ok', '✓ Plantilla guardada');
     } catch (e) {
-      showToast('error', 'Error al guardar — revisa la consola');
-      console.error(e);
+      console.error('[handleGuardar] Error:', e);
+      const msg = e instanceof Error ? e.message : String(e);
+      showToast('error', `Error: ${msg.slice(0, 60)}`);
     } finally {
       setGuardando(false);
     }
@@ -342,15 +348,15 @@ export default function PlantillaPage() {
 
       {/* Toast */}
       {toast && (
-        <div className={`fixed bottom-24 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2
-                         px-4 py-3 rounded-2xl shadow-lg text-sm font-titulo font-semibold
-                         transition-all duration-300 whitespace-nowrap
+        <div className={`fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[999]
+                         flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl
+                         text-base font-titulo font-bold whitespace-nowrap
                          ${toast.tipo === 'ok'
                            ? 'bg-quarte-verde text-white'
                            : 'bg-quarte-rojo text-white'}`}>
           {toast.tipo === 'ok'
-            ? <CheckCircle2 size={18} />
-            : <XCircle size={18} />}
+            ? <CheckCircle2 size={24} />
+            : <XCircle size={24} />}
           {toast.msg}
         </div>
       )}

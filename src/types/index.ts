@@ -42,6 +42,7 @@ export interface JugadorEnCampo {
   x: number;               // Posición relativa en el canvas (0-1)
   y: number;
   en_campo: boolean;       // true = titular, false = banquillo
+  slot_idx?: number;       // índice exacto del slot (para restore fiable)
 }
 
 export interface Alineacion {
