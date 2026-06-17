@@ -217,7 +217,6 @@ export const usePlantillaStore = create<PlantillaState>((set, get) => ({
       .filter(s => s.jugadorId)
       .map(s => ({ jugador_id: s.jugadorId!, x: s.x, y: s.y, en_campo: true }));
 
-    // Reutilizar el mismo id si ya existe una alineación con ese nombre
     const existing = alineacionesGuardadas.find(a => a.nombre === nombre);
     const a: Alineacion = {
       id: existing?.id ?? crypto.randomUUID(),
@@ -229,6 +228,7 @@ export const usePlantillaStore = create<PlantillaState>((set, get) => ({
       creado_en: existing?.creado_en ?? Date.now(),
       actualizado_en: Date.now(),
     };
+    // Lanza excepción si Supabase falla (check() en RemoteDataProvider ya hace throw)
     await dataProvider.saveAlineacion(a);
     set(s => ({
       alineacionesGuardadas: existing

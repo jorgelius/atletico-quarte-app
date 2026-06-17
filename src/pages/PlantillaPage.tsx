@@ -3,7 +3,7 @@
 // Tabs: Alineación | Jugadores
 // ============================================================
 import { useEffect, useRef, useState } from 'react';
-import { Users, Save, Download, Trash2, ChevronDown, ClipboardList } from 'lucide-react';
+import { Users, Save, Download, Trash2, ChevronDown, ClipboardList, CheckCircle2, XCircle } from 'lucide-react';
 import Konva from 'konva';
 import { usePerfilStore } from '@/stores/perfilStore';
 import { usePlantillaStore } from '@/stores/plantillaStore';
@@ -35,6 +35,8 @@ export default function PlantillaPage() {
   const [nombreAlin, setNombreA] = useState('');
   const [showCargar, setShowC]  = useState(false);
   const [showFmt, setShowFmt]   = useState(false);
+  const [toast, setToast] = useState<{ tipo: 'ok' | 'error'; msg: string } | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { activeTeamId } = usePerfilStore();
 
@@ -68,12 +70,24 @@ export default function PlantillaPage() {
     a.click();
   }
 
+  function showToast(tipo: 'ok' | 'error', msg: string) {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToast({ tipo, msg });
+    toastTimer.current = setTimeout(() => setToast(null), 3000);
+  }
+
   // ── Guardar alineación ──
   async function handleGuardar() {
     if (!nombreAlin.trim() || !activeTeamId) return;
-    await store.guardarAlineacion(activeTeamId, nombreAlin.trim());
-    setShowG(false);
-    setNombreA('');
+    try {
+      await store.guardarAlineacion(activeTeamId, nombreAlin.trim());
+      setShowG(false);
+      setNombreA('');
+      showToast('ok', `"${nombreAlin.trim()}" guardada`);
+    } catch (e) {
+      showToast('error', 'No se pudo guardar. Revisa la consola.');
+      console.error(e);
+    }
   }
 
   return (
@@ -342,6 +356,21 @@ export default function PlantillaPage() {
           onGuardar={j => { store.editarJugador(j); setModal(null); }}
           onCerrar={() => setModal(null)}
         />
+      )}
+
+      {/* Toast */}
+      {toast && (
+        <div className={`fixed bottom-24 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2
+                         px-4 py-3 rounded-2xl shadow-lg text-sm font-titulo font-semibold
+                         transition-all duration-300 whitespace-nowrap
+                         ${toast.tipo === 'ok'
+                           ? 'bg-quarte-verde text-white'
+                           : 'bg-quarte-rojo text-white'}`}>
+          {toast.tipo === 'ok'
+            ? <CheckCircle2 size={18} />
+            : <XCircle size={18} />}
+          {toast.msg}
+        </div>
       )}
     </div>
   );
