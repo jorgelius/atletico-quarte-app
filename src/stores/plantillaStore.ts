@@ -92,15 +92,49 @@ export const usePlantillaStore = create<PlantillaState>((set, get) => ({
       dataProvider.getJugadores(ownerId),
       dataProvider.getAlineaciones(ownerId),
     ]);
-    // Poblar banquillo con todos los jugadores cargados
     const { formato, formacion } = get();
-    const slots = buildSlots(formato, formacion);
-    const numTitulares = getNumTitulares(formato);
-    jugadores.forEach((j, i) => {
-      const banqIdx = numTitulares + i;
-      if (banqIdx < slots.length) slots[banqIdx].jugadorId = j.id;
-    });
-    set({ jugadores, alineacionesGuardadas: alineaciones, slots, cargando: false });
+
+    // Auto-aplicar la alineación más reciente si existe
+    const lastAlin = alineaciones.length > 0
+      ? [...alineaciones].sort((a, b) => b.actualizado_en - a.actualizado_en)[0]
+      : null;
+
+    if (lastAlin) {
+      const activeFormato   = lastAlin.formato;
+      const activeFormacion = lastAlin.formacion;
+      const slots = buildSlots(activeFormato, activeFormacion);
+
+      // Colocar titulares guardados en sus posiciones
+      lastAlin.posiciones.forEach(p => {
+        const slot = slots.find(s =>
+          s.esTitular &&
+          Math.abs(s.x - p.x) < 0.05 &&
+          Math.abs(s.y - p.y) < 0.05
+        );
+        if (slot) slot.jugadorId = p.jugador_id;
+      });
+
+      // Rellenar banquillo con jugadores no titulares
+      const enCampoIds = new Set(lastAlin.posiciones.map(p => p.jugador_id));
+      const enBanquillo = jugadores.filter(j => !enCampoIds.has(j.id));
+      const numTit = getNumTitulares(activeFormato);
+      enBanquillo.forEach((j, i) => {
+        const idx = numTit + i;
+        if (idx < slots.length) slots[idx].jugadorId = j.id;
+      });
+
+      set({ jugadores, alineacionesGuardadas: alineaciones, slots,
+            formato: activeFormato, formacion: activeFormacion, cargando: false });
+    } else {
+      // Sin alineaciones guardadas: todos al banquillo
+      const slots = buildSlots(formato, formacion);
+      const numTitulares = getNumTitulares(formato);
+      jugadores.forEach((j, i) => {
+        const banqIdx = numTitulares + i;
+        if (banqIdx < slots.length) slots[banqIdx].jugadorId = j.id;
+      });
+      set({ jugadores, alineacionesGuardadas: alineaciones, slots, cargando: false });
+    }
   },
 
   agregarJugador: async (j) => {
@@ -177,23 +211,30 @@ export const usePlantillaStore = create<PlantillaState>((set, get) => ({
   },
 
   guardarAlineacion: async (ownerId, nombre) => {
-    const { formato, formacion, slots } = get();
+    const { formato, formacion, slots, alineacionesGuardadas } = get();
     const numTit = getNumTitulares(formato);
     const posiciones = slots.slice(0, numTit)
       .filter(s => s.jugadorId)
       .map(s => ({ jugador_id: s.jugadorId!, x: s.x, y: s.y, en_campo: true }));
+
+    // Reutilizar el mismo id si ya existe una alineación con ese nombre
+    const existing = alineacionesGuardadas.find(a => a.nombre === nombre);
     const a: Alineacion = {
-      id: crypto.randomUUID(),
+      id: existing?.id ?? crypto.randomUUID(),
       owner_id: ownerId,
       nombre,
       formato,
       formacion,
       posiciones,
-      creado_en: Date.now(),
+      creado_en: existing?.creado_en ?? Date.now(),
       actualizado_en: Date.now(),
     };
     await dataProvider.saveAlineacion(a);
-    set(s => ({ alineacionesGuardadas: [...s.alineacionesGuardadas, a] }));
+    set(s => ({
+      alineacionesGuardadas: existing
+        ? s.alineacionesGuardadas.map(x => x.id === a.id ? a : x)
+        : [...s.alineacionesGuardadas, a],
+    }));
   },
 
   cargarAlineacion: (a) => {
