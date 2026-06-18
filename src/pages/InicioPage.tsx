@@ -253,7 +253,7 @@ export default function InicioPage() {
         {jugados.length > 0 && (
           <div className="card flex flex-col gap-3">
             <p className="font-titulo font-bold text-sm text-quarte-negro">
-              Temporada 2025/26
+              Temporada 2026/27
             </p>
             <div className="grid grid-cols-4 gap-2">
               {[

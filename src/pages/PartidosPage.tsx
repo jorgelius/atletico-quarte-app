@@ -27,7 +27,7 @@ type View =
 type TabFiltro = 'todos' | 'proximos' | 'jugados' | 'temporada';
 
 // ── Helpers ──────────────────────────────────────────────────
-const TEMPORADA_ACTUAL = '2025/26';
+const TEMPORADA_ACTUAL = '2026/27';
 
 const EVENT_LABELS: Record<MatchEventType, { icon: string; label: string; color: string }> = {
   goal:        { icon: '⚽', label: 'Gol',              color: 'text-quarte-verde' },

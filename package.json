@@ -13,6 +13,8 @@
     "@supabase/supabase-js": "^2.107.0",
     "autoprefixer": "^10.5.0",
     "dexie": "^4.4.3",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.2.1",
     "konva": "^10.3.0",
     "lucide-react": "^1.17.0",
     "postcss": "^8.5.15",

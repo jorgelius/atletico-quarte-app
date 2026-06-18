@@ -6,7 +6,7 @@
 import { create } from 'zustand';
 import { supabase } from '@/data/supabaseClient';
 
-const TEMPORADA_ACTUAL = '2025/26';
+const TEMPORADA_ACTUAL = '2026/27';
 
 export interface PlayerStats {
   player_id:   string;

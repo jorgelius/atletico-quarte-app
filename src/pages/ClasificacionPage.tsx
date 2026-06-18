@@ -344,7 +344,7 @@ export default function ClasificacionPage() {
             </div>
             <div className="flex items-center gap-2 flex-wrap ml-11 mt-1">
               <TeamSwitcher dark={false} />
-              <span className="font-cuerpo text-sm text-gray-500">Temporada 2025/26</span>
+              <span className="font-cuerpo text-sm text-gray-500">Temporada 2026/27</span>
             </div>
           </div>
 

@@ -101,7 +101,7 @@ export default function EstadisticasPage() {
             <h1 className="font-titulo text-lg font-bold">Estadísticas</h1>
             <div className="flex items-center gap-2 flex-wrap mt-0.5">
               <TeamSwitcher />
-              <span className="text-blue-200 text-xs">Temporada 2025/26</span>
+              <span className="text-blue-200 text-xs">Temporada 2026/27</span>
             </div>
           </div>
         </div>

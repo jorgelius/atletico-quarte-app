@@ -2,13 +2,14 @@
 // ConvocatoriaEditor — editor de convocatoria de partido
 // Dos paneles: plantilla disponible (izq) ↔ convocados (der)
 // ============================================================
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import {
   ArrowLeft, Save, Users, ChevronDown, ChevronUp,
-  Minus, Share2, Check, AlertCircle,
+  Minus, Share2, Check, AlertCircle, FileDown,
 } from 'lucide-react';
 import type { Match, MatchSquad, MatchSquadStatus, Jugador } from '@/types';
 import type { EstadisticaJugador } from '@/stores/asistenciaStore';
+import ConvocatoriaPDFTemplate from './ConvocatoriaPDFTemplate';
 
 // ── Helpers ──────────────────────────────────────────────────
 
@@ -228,6 +229,8 @@ export default function ConvocatoriaEditor({
   );
   const [panel, setPanel] = useState<'disponibles' | 'convocados'>('disponibles');
   const [copiado, setCopiado] = useState(false);
+  const [exportando, setExportando] = useState(false);
+  const pdfRef = useRef<HTMLDivElement>(null);
 
   const convocadosIds = new Set(squad.map(s => s.player_id));
 
@@ -346,6 +349,36 @@ export default function ConvocatoriaEditor({
     return Math.round((s.asistidos / s.total) * 100);
   }
 
+  // ── Export PDF ──────────────────────────────────────────────
+  async function handleExportPDF() {
+    if (!pdfRef.current || squad.length === 0) return;
+    setExportando(true);
+    try {
+      const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+        import('html2canvas'),
+        import('jspdf'),
+      ]);
+      const canvas = await html2canvas(pdfRef.current, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: false,
+        backgroundColor: '#ffffff',
+        logging: false,
+      });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = (canvas.height * pageW) / canvas.width;
+      pdf.addImage(imgData, 'PNG', 0, 0, pageW, pageH);
+      const filename = `convocatoria-${partido.rival_name.toLowerCase().replace(/\s+/g, '-')}.pdf`;
+      pdf.save(filename);
+    } catch (e) {
+      console.error('Error generando PDF:', e);
+    } finally {
+      setExportando(false);
+    }
+  }
+
   // ── Render ───────────────────────────────────────────────────
   const lleno = squad.length >= maxConvocados;
 
@@ -363,12 +396,21 @@ export default function ConvocatoriaEditor({
             vs {partido.rival_name} · {formatFechaCorta(partido.date)}
           </p>
         </div>
-        {/* Compartir */}
+        {/* Copiar texto */}
         <button onClick={compartir} disabled={squad.length === 0}
           className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/20 hover:bg-white/30
                      text-xs font-titulo font-semibold disabled:opacity-40 transition-colors">
           {copiado ? <Check size={14} /> : <Share2 size={14} />}
-          {copiado ? 'Copiado' : 'Exportar'}
+          {copiado ? 'Copiado' : 'Texto'}
+        </button>
+        {/* Descargar PDF */}
+        <button onClick={handleExportPDF} disabled={squad.length === 0 || exportando}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/20 hover:bg-white/30
+                     text-xs font-titulo font-semibold disabled:opacity-40 transition-colors">
+          {exportando
+            ? <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            : <FileDown size={14} />}
+          PDF
         </button>
         {/* Guardar */}
         <button onClick={() => onGuardar(squad)} disabled={guardando}
@@ -557,6 +599,17 @@ export default function ConvocatoriaEditor({
             )}
           </div>
         )}
+      </div>
+
+      {/* Template oculto para generación de PDF */}
+      <div style={{ position: 'fixed', left: '-9999px', top: '-9999px', zIndex: -1 }}>
+        <ConvocatoriaPDFTemplate
+          ref={pdfRef}
+          partido={partido}
+          jugadores={jugadores}
+          squad={squad}
+          equipo={equipo}
+        />
       </div>
     </div>
   );

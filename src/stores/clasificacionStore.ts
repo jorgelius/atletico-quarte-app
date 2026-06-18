@@ -8,7 +8,7 @@ import { create } from 'zustand';
 import { supabase } from '@/data/supabaseClient';
 import type { ClasificacionRow } from '@/types';
 
-const TEMPORADA_DEFAULT = '2025/26';
+const TEMPORADA_DEFAULT = '2026/27';
 
 interface DbRow {
   posicion: number;
