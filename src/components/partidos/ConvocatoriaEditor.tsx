@@ -6,6 +6,7 @@ import { useState, useCallback, useRef } from 'react';
 import {
   ArrowLeft, Save, Users, ChevronDown, ChevronUp,
   Minus, Share2, Check, AlertCircle, FileDown,
+  CheckCircle2, XCircle, Loader2,
 } from 'lucide-react';
 import type { Match, MatchSquad, MatchSquadStatus, Jugador } from '@/types';
 import type { EstadisticaJugador } from '@/stores/asistenciaStore';
@@ -208,7 +209,6 @@ interface Props {
   statsAsistencia: EstadisticaJugador[];
   initialSquad: MatchSquad[];
   equipo:     string;
-  guardando:  boolean;
   onGuardar:  (squad: MatchSquad[]) => Promise<void>;
   onBack:     () => void;
 }
@@ -218,7 +218,7 @@ interface Props {
 // ============================================================
 export default function ConvocatoriaEditor({
   partido, jugadores, statsAsistencia, initialSquad,
-  equipo, guardando, onGuardar, onBack,
+  equipo, onGuardar, onBack,
 }: Props) {
   const { maxConvocados, numTitulares } = detectarLimites(equipo);
   const jugadoresIds = new Set(jugadores.map(j => j.id));
@@ -229,8 +229,29 @@ export default function ConvocatoriaEditor({
   );
   const [panel, setPanel] = useState<'disponibles' | 'convocados'>('disponibles');
   const [copiado, setCopiado] = useState(false);
+  const [guardando, setGuardando] = useState(false);
   const [exportando, setExportando] = useState(false);
+  const [toast, setToast] = useState<{ tipo: 'ok' | 'error'; msg: string } | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pdfRef = useRef<HTMLDivElement>(null);
+
+  function showToast(tipo: 'ok' | 'error', msg: string) {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToast({ tipo, msg });
+    toastTimer.current = setTimeout(() => setToast(null), 4000);
+  }
+
+  async function handleGuardar() {
+    if (guardando) return;
+    setGuardando(true);
+    try {
+      await onGuardar(squad);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      showToast('error', `Error al guardar: ${msg.slice(0, 60)}`);
+      setGuardando(false);
+    }
+  }
 
   const convocadosIds = new Set(squad.map(s => s.player_id));
 
@@ -398,10 +419,13 @@ export default function ConvocatoriaEditor({
         </div>
         {/* Copiar texto */}
         <button onClick={compartir} disabled={squad.length === 0}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/20 hover:bg-white/30
-                     text-xs font-titulo font-semibold disabled:opacity-40 transition-colors">
+          className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-titulo font-semibold
+                      disabled:opacity-40 transition-all duration-300
+                      ${copiado
+                        ? 'bg-quarte-verde text-white scale-105'
+                        : 'bg-white/20 hover:bg-white/30'}`}>
           {copiado ? <Check size={14} /> : <Share2 size={14} />}
-          {copiado ? 'Copiado' : 'Texto'}
+          {copiado ? '¡Copiado!' : 'Texto'}
         </button>
         {/* Descargar PDF */}
         <button onClick={handleExportPDF} disabled={squad.length === 0 || exportando}
@@ -413,13 +437,13 @@ export default function ConvocatoriaEditor({
           PDF
         </button>
         {/* Guardar */}
-        <button onClick={() => onGuardar(squad)} disabled={guardando}
+        <button onClick={handleGuardar} disabled={guardando}
           className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-quarte-rojo hover:bg-red-700
                      text-xs font-titulo font-semibold disabled:opacity-60 transition-colors">
           {guardando
-            ? <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ? <Loader2 size={14} className="animate-spin" />
             : <Save size={14} />}
-          Guardar
+          {guardando ? 'Guardando…' : 'Guardar'}
         </button>
       </div>
 
@@ -600,6 +624,17 @@ export default function ConvocatoriaEditor({
           </div>
         )}
       </div>
+
+      {/* Toast — igual que PlantillaPage */}
+      {toast && (
+        <div className={`fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[999]
+                         flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl
+                         text-base font-titulo font-bold whitespace-nowrap
+                         ${toast.tipo === 'ok' ? 'bg-quarte-verde text-white' : 'bg-quarte-rojo text-white'}`}>
+          {toast.tipo === 'ok' ? <CheckCircle2 size={24} /> : <XCircle size={24} />}
+          {toast.msg}
+        </div>
+      )}
 
       {/* Template oculto para generación de PDF */}
       <div style={{ position: 'fixed', left: '-9999px', top: '-9999px', zIndex: -1 }}>

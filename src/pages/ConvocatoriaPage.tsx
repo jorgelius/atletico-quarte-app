@@ -64,7 +64,6 @@ export default function ConvocatoriaPage() {
       statsAsistencia={asistenciaStore.estadisticasLista}
       initialSquad={initialSquad}
       equipo={getEquipoNombre(activeTeamId ?? '') || perfil.equipo}
-      guardando={convocatoriaStore.guardando}
       onGuardar={handleGuardar}
       onBack={() => navigate('/partidos', { state: { openId: matchId } })}
     />
