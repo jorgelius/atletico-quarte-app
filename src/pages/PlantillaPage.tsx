@@ -264,7 +264,7 @@ export default function PlantillaPage() {
           <div className="p-4 max-w-lg mx-auto">
             <GestorJugadores
               jugadores={store.jugadores}
-              ownerId={perfil.id}
+              ownerId={activeTeamId ?? ''}
               onAgregar={store.agregarJugador}
               onEditar={store.editarJugador}
               onBorrar={store.borrarJugador}
