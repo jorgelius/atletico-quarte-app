@@ -59,7 +59,7 @@ export default function InicioPage() {
       .from('trainings')
       .select('id, titulo')
       .eq('coach_id', teamId)
-      .order('created_at', { ascending: false })
+      .order('creado_en', { ascending: false })
       .limit(5);
 
     if (!trainings || trainings.length === 0) return;

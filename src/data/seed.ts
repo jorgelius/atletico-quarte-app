@@ -1061,12 +1061,14 @@ const TACTICAS_SEED: Tactica[] = [
 
 export async function runSeedIfNeeded() {
   if (localStorage.getItem(SEED_KEY)) return;
+  // Marcar como hecho antes de intentar para no reintentar en cada recarga
+  localStorage.setItem(SEED_KEY, '1');
+  let ok = 0;
   for (const e of ENTRENAMIENTOS_SEED) {
-    await dataProvider.saveEntrenamiento(e);
+    try { await dataProvider.saveEntrenamiento(e); ok++; } catch { /* ya existe o RLS — ignorar */ }
   }
   for (const t of TACTICAS_SEED) {
-    await dataProvider.saveTactica(t);
+    try { await dataProvider.saveTactica(t); ok++; } catch { /* ya existe o RLS — ignorar */ }
   }
-  localStorage.setItem(SEED_KEY, '1');
-  console.info('[Atlético Quarte] Seed v3 cargado — 32 ejercicios + 11 tácticas ✓');
+  console.info(`[Atlético Quarte] Seed v3 — ${ok} items procesados`);
 }

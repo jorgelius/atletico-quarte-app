@@ -21,42 +21,50 @@ CREATE TABLE IF NOT EXISTS match_squad (
 CREATE INDEX IF NOT EXISTS idx_match_squad_match_id  ON match_squad (match_id);
 CREATE INDEX IF NOT EXISTS idx_match_squad_player_id ON match_squad (player_id);
 
--- RLS: misma política que matches (el propietario puede ver/editar los suyos)
+-- RLS: mismo patrón jsonb que el resto de tablas del proyecto
 ALTER TABLE match_squad ENABLE ROW LEVEL SECURITY;
 
--- Policy: leer si el match pertenece al team_id del usuario autenticado
+DROP POLICY IF EXISTS "match_squad_select" ON match_squad;
+DROP POLICY IF EXISTS "match_squad_insert" ON match_squad;
+DROP POLICY IF EXISTS "match_squad_update" ON match_squad;
+DROP POLICY IF EXISTS "match_squad_delete" ON match_squad;
+
 CREATE POLICY "match_squad_select" ON match_squad
-  FOR SELECT USING (
+  FOR SELECT TO authenticated
+  USING (
     EXISTS (
       SELECT 1 FROM matches m
       WHERE m.id = match_squad.match_id
-        AND m.team_id = auth.uid()
+        AND (SELECT equipo FROM profiles WHERE id = auth.uid())::jsonb ? m.team_id::text
     )
   );
 
 CREATE POLICY "match_squad_insert" ON match_squad
-  FOR INSERT WITH CHECK (
+  FOR INSERT TO authenticated
+  WITH CHECK (
     EXISTS (
       SELECT 1 FROM matches m
       WHERE m.id = match_squad.match_id
-        AND m.team_id = auth.uid()
+        AND (SELECT equipo FROM profiles WHERE id = auth.uid())::jsonb ? m.team_id::text
     )
   );
 
 CREATE POLICY "match_squad_update" ON match_squad
-  FOR UPDATE USING (
+  FOR UPDATE TO authenticated
+  USING (
     EXISTS (
       SELECT 1 FROM matches m
       WHERE m.id = match_squad.match_id
-        AND m.team_id = auth.uid()
+        AND (SELECT equipo FROM profiles WHERE id = auth.uid())::jsonb ? m.team_id::text
     )
   );
 
 CREATE POLICY "match_squad_delete" ON match_squad
-  FOR DELETE USING (
+  FOR DELETE TO authenticated
+  USING (
     EXISTS (
       SELECT 1 FROM matches m
       WHERE m.id = match_squad.match_id
-        AND m.team_id = auth.uid()
+        AND (SELECT equipo FROM profiles WHERE id = auth.uid())::jsonb ? m.team_id::text
     )
   );
