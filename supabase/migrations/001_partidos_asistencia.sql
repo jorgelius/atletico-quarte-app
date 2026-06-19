@@ -47,9 +47,20 @@ ALTER TABLE match_events ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "match_events_owner" ON match_events;
 CREATE POLICY "match_events_owner" ON match_events
-  FOR ALL
+  FOR ALL TO authenticated
   USING (
-    match_id IN (SELECT id FROM matches WHERE team_id = auth.uid())
+    EXISTS (
+      SELECT 1 FROM matches m
+      WHERE m.id = match_events.match_id
+        AND (SELECT equipo FROM profiles WHERE id = auth.uid())::jsonb ? m.team_id::text
+    )
+  )
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM matches m
+      WHERE m.id = match_events.match_id
+        AND (SELECT equipo FROM profiles WHERE id = auth.uid())::jsonb ? m.team_id::text
+    )
   );
 
 CREATE INDEX IF NOT EXISTS match_events_match_idx ON match_events (match_id);
