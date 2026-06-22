@@ -58,6 +58,13 @@ function JugadorFila({
   onCambiar: (s: AttendanceStatus) => void;
 }) {
   const cfg = ESTADOS.find(e => e.status === status);
+  const [lastTapped, setLastTapped] = useState<AttendanceStatus | null>(null);
+
+  function handleCambiar(s: AttendanceStatus) {
+    setLastTapped(s);
+    setTimeout(() => setLastTapped(null), 380);
+    onCambiar(s);
+  }
 
   return (
     <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
@@ -83,9 +90,10 @@ function JugadorFila({
 
       <div className="flex border-t border-gray-100">
         {ESTADOS.map(est => (
-          <button key={est.status} onClick={() => onCambiar(est.status)}
+          <button key={est.status} onClick={() => handleCambiar(est.status)}
             className={`flex-1 py-2 text-base transition-colors
-              ${status === est.status ? `${est.bg}` : 'hover:bg-gray-50'}`}>
+              ${status === est.status ? `${est.bg}` : 'hover:bg-gray-50'}`}
+            style={lastTapped === est.status ? { animation: 'aq-pop .35s cubic-bezier(.34,1.6,.5,1)' } : undefined}>
             {est.emoji}
           </button>
         ))}
@@ -181,8 +189,10 @@ function SesionCard({
 // ── Modal de confirmación de borrado ──────────────────────────
 function ConfirmDeleteModal({ onConfirm, onCancel }: { onConfirm: () => void; onCancel: () => void }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 px-4 pb-6">
-      <div className="bg-white rounded-2xl w-full max-w-sm p-5 flex flex-col gap-4 shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 px-4 pb-6"
+      style={{ animation: 'aq-fadeIn .2s ease both' }}>
+      <div className="bg-white rounded-2xl w-full max-w-sm p-5 flex flex-col gap-4 shadow-xl"
+        style={{ animation: 'aq-slideUp .32s cubic-bezier(.5,0,.2,1) both' }}>
         <div className="flex items-start gap-3">
           <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center flex-shrink-0">
             <Trash2 size={18} className="text-red-500" />
@@ -409,8 +419,20 @@ export default function PasarListaPage() {
       {/* Lista del día */}
       <div className="flex-1 overflow-y-auto p-4 max-w-lg mx-auto w-full flex flex-col gap-5">
         {plantillaStore.cargando ? (
-          <div className="flex justify-center py-12">
-            <div className="w-8 h-8 border-3 border-quarte-azul border-t-transparent rounded-full animate-spin" />
+          <div className="flex flex-col gap-2">
+            {Array.from({ length: 7 }).map((_, i) => (
+              <div key={i} className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                <div className="flex items-center gap-3 px-3 py-2.5">
+                  <div className="w-10 h-10 rounded-full aq-shimmer flex-shrink-0" />
+                  <div className="flex-1 flex flex-col gap-2">
+                    <div className="h-3.5 rounded-full aq-shimmer w-3/4" />
+                    <div className="h-2.5 rounded-full aq-shimmer w-2/5" />
+                  </div>
+                  <div className="h-5 w-16 rounded-full aq-shimmer" />
+                </div>
+                <div className="h-9 aq-shimmer" />
+              </div>
+            ))}
           </div>
         ) : jugadores.length === 0 ? (
           <div className="flex flex-col items-center py-16 text-gray-400 gap-3">

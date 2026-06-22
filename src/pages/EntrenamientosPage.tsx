@@ -95,13 +95,19 @@ export default function EntrenamientosPage() {
             <Plus size={20} />
           </button>
         </div>
-        {/* Tabs */}
-        <div className="flex">
+        {/* Tabs — con indicador deslizante */}
+        <div className="relative flex">
+          <div className="absolute bottom-0 h-0.5 bg-white pointer-events-none"
+            style={{
+              width: '33.333%',
+              transform: `translateX(${['biblioteca','favoritos','mios'].indexOf(tab) * 100}%)`,
+              transition: 'transform .3s cubic-bezier(.5,0,.2,1)',
+            }} />
           {tabs.map(t => (
             <button key={t.id} onClick={() => setTab(t.id)}
               className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-titulo font-semibold
-                          transition-colors border-b-2
-                          ${tab === t.id ? 'text-white border-white' : 'text-red-300 border-transparent hover:text-white'}`}>
+                          transition-colors
+                          ${tab === t.id ? 'text-white' : 'text-red-300 hover:text-white'}`}>
               {t.icon} {t.label}
             </button>
           ))}

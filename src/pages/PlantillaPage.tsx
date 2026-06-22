@@ -3,7 +3,7 @@
 // Tabs: Alineación | Jugadores
 // ============================================================
 import { useEffect, useRef, useState } from 'react';
-import { Users, Save, Download, Trash2, ChevronDown, ClipboardList, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+import { Users, Save, Download, Trash2, ChevronDown, ClipboardList, CheckCircle2, XCircle, Loader2, Check } from 'lucide-react';
 import Konva from 'konva';
 import { usePerfilStore } from '@/stores/perfilStore';
 import { usePlantillaStore } from '@/stores/plantillaStore';
@@ -34,6 +34,7 @@ export default function PlantillaPage() {
   const [showCargar, setShowC]  = useState(false);
   const [showFmt, setShowFmt]   = useState(false);
   const [guardando, setGuardando] = useState(false);
+  const [saved,     setSaved]     = useState(false);
   const [toast, setToast] = useState<{ tipo: 'ok' | 'error'; msg: string } | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -86,6 +87,8 @@ export default function PlantillaPage() {
     setGuardando(true);
     try {
       await store.guardarAlineacion(activeTeamId, 'Plantilla activa');
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2200);
       showToast('ok', '✓ Plantilla guardada');
     } catch (e) {
       console.error('[handleGuardar] Error:', e);
@@ -119,19 +122,31 @@ export default function PlantillaPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex bg-quarte-azul border-t border-blue-800">
-        {([
-          { id: 'alineacion', label: '⚽ Alineación' },
-          { id: 'jugadores',  label: '👥 Jugadores'  },
-          { id: 'asistencia', label: '📋 Asistencia' },
-        ] as { id: Tab; label: string }[]).map(t => (
-          <button key={t.id} onClick={() => setTab(t.id)}
-            className={`flex-1 py-2.5 text-xs font-titulo font-semibold transition-colors
-              ${tab === t.id ? 'text-white border-b-2 border-quarte-rojo' : 'text-blue-300 hover:text-white'}`}>
-            {t.label}
-          </button>
-        ))}
-      </div>
+      {(() => {
+        const TABS = [
+          { id: 'alineacion' as Tab, label: '⚽ Alineación' },
+          { id: 'jugadores'  as Tab, label: '👥 Jugadores'  },
+          { id: 'asistencia' as Tab, label: '📋 Asistencia' },
+        ];
+        const idx = TABS.findIndex(t => t.id === tab);
+        return (
+          <div className="relative flex bg-quarte-azul border-t border-blue-800">
+            <div className="absolute bottom-0 h-0.5 bg-quarte-rojo pointer-events-none"
+              style={{
+                width: '33.333%',
+                transform: `translateX(${idx * 100}%)`,
+                transition: 'transform .3s cubic-bezier(.5,0,.2,1)',
+              }} />
+            {TABS.map(t => (
+              <button key={t.id} onClick={() => setTab(t.id)}
+                className={`flex-1 py-2.5 text-xs font-titulo font-semibold transition-colors
+                  ${tab === t.id ? 'text-white' : 'text-blue-300 hover:text-white'}`}>
+                {t.label}
+              </button>
+            ))}
+          </div>
+        );
+      })()}
 
       <div className="flex-1 overflow-y-auto">
         {/* ── TAB ALINEACIÓN ── */}
@@ -224,12 +239,15 @@ export default function PlantillaPage() {
             </div>
 
             {/* Guardar plantilla — un solo clic */}
-            <button onClick={handleGuardar} disabled={guardando}
-              className="btn-secundario w-full flex items-center justify-center gap-2 text-sm">
+            <button onClick={handleGuardar} disabled={guardando || saved}
+              className={`btn-secundario w-full flex items-center justify-center gap-2 text-sm transition-colors
+                ${saved ? '!bg-quarte-verde' : ''}`}>
               {guardando
-                ? <Loader2 size={16} className="animate-spin" />
-                : <Save size={16} />}
-              {guardando ? 'Guardando…' : 'Guardar plantilla'}
+                ? <Loader2 size={16} style={{ animation: 'aq-spin .8s linear infinite' }} />
+                : saved
+                  ? <Check size={16} style={{ animation: 'aq-checkIn .3s cubic-bezier(.34,1.6,.5,1)' }} />
+                  : <Save size={16} />}
+              {guardando ? 'Guardando…' : saved ? '¡Guardado!' : 'Guardar plantilla'}
             </button>
 
             {/* Lista alineaciones guardadas (por si hay más de una) */}
@@ -348,16 +366,18 @@ export default function PlantillaPage() {
 
       {/* Toast */}
       {toast && (
-        <div className={`fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[999]
-                         flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl
-                         text-base font-titulo font-bold whitespace-nowrap
-                         ${toast.tipo === 'ok'
-                           ? 'bg-quarte-verde text-white'
-                           : 'bg-quarte-rojo text-white'}`}>
-          {toast.tipo === 'ok'
-            ? <CheckCircle2 size={24} />
-            : <XCircle size={24} />}
-          {toast.msg}
+        <div className="fixed inset-0 pointer-events-none z-[999] flex items-center justify-center">
+          <div className={`flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl
+                           text-base font-titulo font-bold whitespace-nowrap
+                           ${toast.tipo === 'ok'
+                             ? 'bg-quarte-verde text-white'
+                             : 'bg-quarte-rojo text-white'}`}
+            style={{ animation: 'aq-toastIn .32s cubic-bezier(.34,1.4,.5,1) both' }}>
+            {toast.tipo === 'ok'
+              ? <CheckCircle2 size={24} />
+              : <XCircle size={24} />}
+            {toast.msg}
+          </div>
         </div>
       )}
     </div>

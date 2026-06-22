@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Clock, Users, Star, ClipboardList } from 'lucide-react';
 import type { Entrenamiento } from '@/types';
 import type { ResumenEntrenamiento } from '@/stores/asistenciaStore';
@@ -33,6 +34,15 @@ interface Props {
 }
 
 export default function EntrenamientoCard({ item, isFav, onOpen, onToggleFav, resumenAsistencia, onAsistencia }: Props) {
+  const [popping, setPopping] = useState(false);
+
+  function handleFav(e: React.MouseEvent) {
+    e.stopPropagation();
+    setPopping(true);
+    setTimeout(() => setPopping(false), 500);
+    onToggleFav();
+  }
+
   return (
     <div className="card flex flex-col gap-2 active:scale-[0.98] transition-transform cursor-pointer"
          onClick={onOpen}>
@@ -53,10 +63,18 @@ export default function EntrenamientoCard({ item, isFav, onOpen, onToggleFav, re
           </div>
           <p className="font-titulo font-bold text-quarte-negro text-sm line-clamp-2">{item.titulo}</p>
         </div>
-        <button onClick={e => { e.stopPropagation(); onToggleFav(); }}
+        <button onClick={handleFav}
           className="w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0
-                     hover:bg-yellow-50 transition-colors">
-          <Star size={16} fill={isFav ? '#F59E0B' : 'none'} stroke={isFav ? '#F59E0B' : '#9CA3AF'} />
+                     hover:bg-yellow-50 transition-colors relative">
+          {isFav && popping && (
+            <span className="absolute inset-0 rounded-full border-2 border-amber-400 pointer-events-none"
+              style={{ animation: 'aq-ring .55s ease forwards' }} />
+          )}
+          <Star size={16}
+            fill={isFav ? '#F59E0B' : 'none'}
+            stroke={isFav ? '#F59E0B' : '#9CA3AF'}
+            style={popping ? { animation: 'aq-pop .4s cubic-bezier(.34,1.6,.5,1)' } : undefined}
+          />
         </button>
       </div>
       <div className="flex items-center gap-3 text-xs text-gray-500">

@@ -1,4 +1,5 @@
 // Vista de detalle de un entrenamiento
+import { useState } from 'react';
 import { ArrowLeft, Star, Clock, Users, Package, Edit2, Trash2 } from 'lucide-react';
 import type { Entrenamiento } from '@/types';
 import PitchBoard from '@/components/pizarra/PitchBoard';
@@ -16,6 +17,14 @@ interface Props {
 }
 
 export default function EntrenamientoDetalle({ item, isFav, canEdit, onBack, onToggleFav, onEdit, onBorrar }: Props) {
+  const [popping, setPopping] = useState(false);
+
+  function handleFav() {
+    setPopping(true);
+    setTimeout(() => setPopping(false), 500);
+    onToggleFav();
+  }
+
   return (
     <div className="flex flex-col min-h-screen bg-quarte-gris">
       {/* Header */}
@@ -28,8 +37,16 @@ export default function EntrenamientoDetalle({ item, isFav, canEdit, onBack, onT
           <h1 className="font-titulo font-bold text-base leading-tight line-clamp-1">{item.titulo}</h1>
           <p className="text-blue-200 text-xs capitalize">{item.categoria} · {item.nivel}</p>
         </div>
-        <button onClick={onToggleFav} className="w-9 h-9 flex items-center justify-center rounded-xl bg-white/10">
-          <Star size={18} fill={isFav ? '#F59E0B' : 'none'} stroke={isFav ? '#F59E0B' : 'white'} />
+        <button onClick={handleFav} className="w-9 h-9 flex items-center justify-center rounded-xl bg-white/10 relative">
+          {isFav && popping && (
+            <span className="absolute inset-1 rounded-full border-2 border-amber-400 pointer-events-none"
+              style={{ animation: 'aq-ring .55s ease forwards' }} />
+          )}
+          <Star size={18}
+            fill={isFav ? '#F59E0B' : 'none'}
+            stroke={isFav ? '#F59E0B' : 'white'}
+            style={popping ? { animation: 'aq-pop .4s cubic-bezier(.34,1.6,.5,1)' } : undefined}
+          />
         </button>
         {canEdit && (
           <>

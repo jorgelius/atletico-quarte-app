@@ -1,7 +1,7 @@
 // ============================================================
 // TacticasPage — Fase 5 (reutiliza PitchBoard)
 // ============================================================
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import {
   LayoutGrid, Plus, Star, ArrowLeft,
   Edit2, Trash2, Save, Loader2, Camera, BookOpen, User, Play, ListOrdered,
@@ -185,6 +185,13 @@ function TacticaDetalle({ item, isFav, canEdit, onBack, onToggleFav, onEdit, onB
   onBack: () => void; onToggleFav: () => void;
   onEdit: () => void; onBorrar: () => void;
 }) {
+  const [popping, setPopping] = useState(false);
+  function handleFav() {
+    setPopping(true);
+    setTimeout(() => setPopping(false), 500);
+    onToggleFav();
+  }
+
   return (
     <div className="flex flex-col min-h-screen bg-quarte-gris">
       <div className="bg-quarte-verde text-white px-4 pt-4 pb-3 flex items-center gap-3">
@@ -195,8 +202,16 @@ function TacticaDetalle({ item, isFav, canEdit, onBack, onToggleFav, onEdit, onB
           <h1 className="font-titulo font-bold text-base line-clamp-1">{item.titulo}</h1>
           <p className="text-green-200 text-xs capitalize">{item.tipo.replace('_',' ')} · {item.formato}</p>
         </div>
-        <button onClick={onToggleFav} className="w-9 h-9 flex items-center justify-center rounded-xl bg-white/10">
-          <Star size={18} fill={isFav ? '#F59E0B' : 'none'} stroke={isFav ? '#F59E0B' : 'white'} />
+        <button onClick={handleFav} className="w-9 h-9 flex items-center justify-center rounded-xl bg-white/10 relative">
+          {isFav && popping && (
+            <span className="absolute inset-1 rounded-full border-2 border-amber-400 pointer-events-none"
+              style={{ animation: 'aq-ring .55s ease forwards' }} />
+          )}
+          <Star size={18}
+            fill={isFav ? '#F59E0B' : 'none'}
+            stroke={isFav ? '#F59E0B' : 'white'}
+            style={popping ? { animation: 'aq-pop .4s cubic-bezier(.34,1.6,.5,1)' } : undefined}
+          />
         </button>
         {canEdit && (
           <>
@@ -248,6 +263,31 @@ function TacticaDetalle({ item, isFav, canEdit, onBack, onToggleFav, onEdit, onB
         )}
       </div>
     </div>
+  );
+}
+
+// ── Botón favorito con animación ─────────────────────────────
+function FavStar({ isFav, onToggle }: { isFav: boolean; onToggle: (e: React.MouseEvent) => void }) {
+  const [popping, setPopping] = useState(false);
+  const handleClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    setPopping(true);
+    setTimeout(() => setPopping(false), 500);
+    onToggle(e);
+  }, [onToggle]);
+  return (
+    <button onClick={handleClick}
+      className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-yellow-50 relative">
+      {isFav && popping && (
+        <span className="absolute inset-0 rounded-full border-2 border-amber-400 pointer-events-none"
+          style={{ animation: 'aq-ring .55s ease forwards' }} />
+      )}
+      <Star size={16}
+        fill={isFav ? '#F59E0B' : 'none'}
+        stroke={isFav ? '#F59E0B' : '#D1D5DB'}
+        style={popping ? { animation: 'aq-pop .4s cubic-bezier(.34,1.6,.5,1)' } : undefined}
+      />
+    </button>
   );
 }
 
@@ -312,12 +352,18 @@ export default function TacticasPage() {
             <Plus size={20} />
           </button>
         </div>
-        <div className="flex">
+        <div className="relative flex">
+          <div className="absolute bottom-0 h-0.5 bg-white pointer-events-none"
+            style={{
+              width: '33.333%',
+              transform: `translateX(${['todo','favoritos','mios'].indexOf(tab) * 100}%)`,
+              transition: 'transform .3s cubic-bezier(.5,0,.2,1)',
+            }} />
           {tabs.map(t => (
             <button key={t.id} onClick={() => setTab(t.id)}
               className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-titulo
-                          font-semibold border-b-2 transition-colors
-                          ${tab === t.id ? 'text-white border-white' : 'text-green-300 border-transparent'}`}>
+                          font-semibold transition-colors
+                          ${tab === t.id ? 'text-white' : 'text-green-300 hover:text-white'}`}>
               {t.icon} {t.label}
             </button>
           ))}
@@ -376,10 +422,7 @@ export default function TacticasPage() {
 
                   {/* Acción fav */}
                   <div className="flex items-center pr-3 pl-1">
-                    <button onClick={e => { e.stopPropagation(); store.toggleFav(perfil!.id, item.id); }}
-                      className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-yellow-50">
-                      <Star size={16} fill={isFav ? '#F59E0B' : 'none'} stroke={isFav ? '#F59E0B' : '#D1D5DB'} />
-                    </button>
+                    <FavStar isFav={isFav} onToggle={e => { e.stopPropagation(); store.toggleFav(perfil!.id, item.id); }} />
                   </div>
                 </button>
               );

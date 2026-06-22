@@ -186,7 +186,8 @@ export default function InicioPage() {
 
           <div className="flex flex-col items-center text-center gap-3">
             <img src={escudoImg} alt="Escudo CD Atlético Quarte"
-              className="w-20 h-20 object-contain drop-shadow-xl" />
+              className="w-20 h-20 object-contain drop-shadow-xl"
+              style={{ animation: 'aq-float 3.5s ease-in-out infinite' }} />
             <h1 className="font-titulo text-2xl font-extrabold tracking-tight text-white">
               CD Atlético Quarte
             </h1>
@@ -202,10 +203,11 @@ export default function InicioPage() {
 
         {/* Accesos rápidos */}
         <div className="grid grid-cols-4 gap-2">
-          {SECCIONES.map(({ to, Icon, label, color }) => (
+          {SECCIONES.map(({ to, Icon, label, color }, i) => (
             <button key={to} onClick={() => navigate(to)}
               className="card flex flex-col items-center gap-2 py-3 px-1 text-center
-                         hover:shadow-md transition-shadow active:scale-[0.97]">
+                         hover:shadow-md transition-shadow active:scale-[0.97]"
+              style={{ animation: `aq-fadeUp .4s cubic-bezier(.5,0,.2,1) ${i * 0.07}s both` }}>
               <div className={`${color} w-10 h-10 rounded-xl flex items-center justify-center shadow`}>
                 <Icon size={20} className="text-white" />
               </div>
@@ -360,10 +362,11 @@ export default function InicioPage() {
 
         {/* FILA 2: Grid de secciones */}
         <div className="grid grid-cols-4 gap-4 mb-4">
-          {SECCIONES.map(({ to, Icon, label, desc, color }) => (
+          {SECCIONES.map(({ to, Icon, label, desc, color }, i) => (
             <button key={to} onClick={() => navigate(to)}
               className="card flex flex-col items-start gap-4 p-5 text-left
-                         hover:shadow-lg active:scale-[0.98] transition-all">
+                         hover:shadow-lg active:scale-[0.98] transition-all"
+              style={{ animation: `aq-fadeUp .4s cubic-bezier(.5,0,.2,1) ${i * 0.07}s both` }}>
               <div className={`${color} w-12 h-12 rounded-xl flex items-center justify-center shadow`}>
                 <Icon size={24} className="text-white" />
               </div>

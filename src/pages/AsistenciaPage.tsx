@@ -41,9 +41,14 @@ function JugadorFila({
   status:    AttendanceStatus | null;
   onCambiar: (status: AttendanceStatus) => void;
 }) {
-  const [, setShowNota] = useState(false);
-
   const cfg = status ? getEstadoConfig(status) : null;
+  const [lastTapped, setLastTapped] = useState<AttendanceStatus | null>(null);
+
+  function handleCambiar(s: AttendanceStatus) {
+    setLastTapped(s);
+    setTimeout(() => setLastTapped(null), 380);
+    onCambiar(s);
+  }
 
   return (
     <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
@@ -81,16 +86,12 @@ function JugadorFila({
         {ESTADO_CONFIG.map(est => (
           <button
             key={est.status}
-            onClick={() => {
-              onCambiar(est.status);
-              if (est.status === 'absent' || est.status === 'justified') {
-                setShowNota(true);
-              }
-            }}
+            onClick={() => handleCambiar(est.status)}
             className={`flex-1 py-2 text-xs font-titulo font-semibold transition-colors
               ${status === est.status
                 ? `${est.bg} ${est.text}`
-                : 'text-gray-400 hover:bg-gray-50'}`}>
+                : 'text-gray-400 hover:bg-gray-50'}`}
+            style={lastTapped === est.status ? { animation: 'aq-pop .35s cubic-bezier(.34,1.6,.5,1)' } : undefined}>
             {est.emoji}
           </button>
         ))}
@@ -160,8 +161,12 @@ export default function AsistenciaPage() {
   if (!perfil || !trainingId) return null;
   if (cargandoEntreno) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="w-8 h-8 border-3 border-quarte-azul border-t-transparent rounded-full animate-spin" />
+      <div className="flex flex-col items-center justify-center min-h-screen gap-3">
+        <div style={{ animation: 'aq-bob 1s ease-in-out infinite' }}>
+          <div className="w-8 h-8 rounded-full border-[3px] border-quarte-azul border-t-transparent"
+            style={{ animation: 'aq-spin .8s linear infinite' }} />
+        </div>
+        <p className="text-xs text-gray-400 font-titulo">Cargando…</p>
       </div>
     );
   }
