@@ -213,7 +213,7 @@ export const usePlantillaStore = create<PlantillaState>((set, get) => ({
   },
 
   moverASlot: (destIdx) => {
-    const { seleccionado, slots, formato } = get();
+    const { seleccionado, slots } = get();
     if (seleccionado === null) return;
     const srcIdx = parseInt(seleccionado);
     if (srcIdx === destIdx) { set({ seleccionado: null }); return; }

@@ -8,7 +8,7 @@ import Konva from 'konva';
 import { usePerfilStore } from '@/stores/perfilStore';
 import { usePlantillaStore } from '@/stores/plantillaStore';
 import { useAsistenciaStore } from '@/stores/asistenciaStore';
-import { getFormaciones, getNumBanquillo, getNumTitulares } from '@/components/plantilla/formaciones';
+import { getFormaciones, getNumBanquillo } from '@/components/plantilla/formaciones';
 import { getFormatoEquipo } from '@/data/equipos';
 import { TeamSwitcher } from '@/components/ui/TeamSwitcher';
 import FieldCanvas from '@/components/plantilla/FieldCanvas';
@@ -50,7 +50,6 @@ export default function PlantillaPage() {
 
   if (!perfil) return null;
 
-  const numTit  = getNumTitulares(store.formato);
   const numBanq = getNumBanquillo(store.formato);
   const formaciones = Object.keys(getFormaciones(store.formato));
   // Jugadores primero, huecos al final — por si el store tiene gaps
