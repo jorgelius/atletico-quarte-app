@@ -53,17 +53,25 @@ interface PlantillaState {
   borrarAlineacion:  (id: string) => Promise<void>;
 }
 
-// Mueve todos los jugadores del banquillo al principio, sin huecos
-function compactBench(slots: SlotJugador[], numTitulares: number): SlotJugador[] {
-  const benchPlayers = slots
-    .filter(s => !s.esTitular)
+// Mueve todos los jugadores del banquillo al principio, sin huecos.
+// No depende de slotIdx ni de numTitulares: procesa los slots de banco
+// en el orden en que aparecen en el array y los rellena de izquierda a derecha.
+function compactBench(slots: SlotJugador[]): SlotJugador[] {
+  const benchSlots   = slots.filter(s => !s.esTitular);
+  const benchPlayers = benchSlots
     .map(s => s.jugadorId)
     .filter((id): id is string => id !== null);
 
+  // Array del mismo tamaño que el banco: jugadores al frente, nulls al final
+  const ordered: (string | null)[] = [
+    ...benchPlayers,
+    ...Array(benchSlots.length - benchPlayers.length).fill(null),
+  ];
+
+  let bi = 0;
   return slots.map(s => {
     if (s.esTitular) return s;
-    const benchIdx = s.slotIdx - numTitulares;
-    return { ...s, jugadorId: benchPlayers[benchIdx] ?? null };
+    return { ...s, jugadorId: ordered[bi++] ?? null };
   });
 }
 
@@ -145,9 +153,8 @@ export const usePlantillaStore = create<PlantillaState>((set, get) => ({
         if (i < huecosBanq.length) huecosBanq[i].jugadorId = j.id;
       });
 
-      const numTit = getNumTitulares(activeFormato);
       set({ jugadores, alineacionesGuardadas: alineaciones,
-            slots: compactBench(slots, numTit),
+            slots: compactBench(slots),
             formato: activeFormato, formacion: activeFormacion, cargando: false });
     } else {
       // Sin alineaciones guardadas: todos al banquillo
@@ -176,9 +183,8 @@ export const usePlantillaStore = create<PlantillaState>((set, get) => ({
 
   borrarJugador: async (id) => {
     await dataProvider.deleteJugador(id);
-    const slots = get().slots.map(s =>
-      s.jugadorId === id ? { ...s, jugadorId: null } : s
-    );
+    const nulled  = get().slots.map(s => s.jugadorId === id ? { ...s, jugadorId: null } : s);
+    const slots   = compactBench(nulled);
     set(s => ({ jugadores: s.jugadores.filter(j => j.id !== id), slots }));
   },
 
@@ -199,7 +205,7 @@ export const usePlantillaStore = create<PlantillaState>((set, get) => ({
     slots.filter(s => !s.esTitular).forEach((s, i) => {
       if (newSlots[numTit + i]) newSlots[numTit + i].jugadorId = s.jugadorId;
     });
-    set({ formacion: f, slots: newSlots, seleccionado: null });
+    set({ formacion: f, slots: compactBench(newSlots), seleccionado: null });
   },
 
   seleccionarSlot: (idx) => {
@@ -218,8 +224,7 @@ export const usePlantillaStore = create<PlantillaState>((set, get) => ({
     newSlots[srcIdx] = { ...srcSlot, jugadorId: dstSlot.jugadorId };
     newSlots[destIdx] = { ...dstSlot, jugadorId: srcSlot.jugadorId };
     // Compacta el banquillo para que no queden huecos
-    const numTitulares = getNumTitulares(formato);
-    set({ slots: compactBench(newSlots, numTitulares), seleccionado: null });
+    set({ slots: compactBench(newSlots), seleccionado: null });
   },
 
   asignarJugadorASlot: (jugadorId, slotIdx) => {

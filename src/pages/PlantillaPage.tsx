@@ -53,7 +53,11 @@ export default function PlantillaPage() {
   const numTit  = getNumTitulares(store.formato);
   const numBanq = getNumBanquillo(store.formato);
   const formaciones = Object.keys(getFormaciones(store.formato));
-  const banqSlots  = store.slots.filter(s => !s.esTitular);
+  // Jugadores primero, huecos al final — por si el store tiene gaps
+  const banqSlots = [
+    ...store.slots.filter(s => !s.esTitular && s.jugadorId !== null),
+    ...store.slots.filter(s => !s.esTitular && s.jugadorId === null),
+  ];
   const jugadorMap = new Map(store.jugadores.map(j => [j.id, j]));
 
   // ── Jugador en el modal ──
@@ -230,7 +234,7 @@ export default function PlantillaPage() {
                           <span className="text-[9px] font-cuerpo truncate px-1">{(jug.apellidos || jug.nombre).split(' ')[0]}</span>
                         </>
                       ) : (
-                        <span className="text-gray-300 text-xs">{slot.slotIdx - numTit + 1}</span>
+                        <span className="text-gray-200 text-lg">+</span>
                       )}
                     </button>
                   );
