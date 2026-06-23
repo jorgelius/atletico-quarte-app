@@ -53,6 +53,20 @@ interface PlantillaState {
   borrarAlineacion:  (id: string) => Promise<void>;
 }
 
+// Mueve todos los jugadores del banquillo al principio, sin huecos
+function compactBench(slots: SlotJugador[], numTitulares: number): SlotJugador[] {
+  const benchPlayers = slots
+    .filter(s => !s.esTitular)
+    .map(s => s.jugadorId)
+    .filter((id): id is string => id !== null);
+
+  return slots.map(s => {
+    if (s.esTitular) return s;
+    const benchIdx = s.slotIdx - numTitulares;
+    return { ...s, jugadorId: benchPlayers[benchIdx] ?? null };
+  });
+}
+
 function buildSlots(formato: FormatoPartido, formacion: string): SlotJugador[] {
   const posiciones: PosFormacion[] = getFormaciones(formato)[formacion] ?? [];
   const numTitulares = getNumTitulares(formato);
@@ -131,7 +145,9 @@ export const usePlantillaStore = create<PlantillaState>((set, get) => ({
         if (i < huecosBanq.length) huecosBanq[i].jugadorId = j.id;
       });
 
-      set({ jugadores, alineacionesGuardadas: alineaciones, slots,
+      const numTit = getNumTitulares(activeFormato);
+      set({ jugadores, alineacionesGuardadas: alineaciones,
+            slots: compactBench(slots, numTit),
             formato: activeFormato, formacion: activeFormacion, cargando: false });
     } else {
       // Sin alineaciones guardadas: todos al banquillo
@@ -191,7 +207,7 @@ export const usePlantillaStore = create<PlantillaState>((set, get) => ({
   },
 
   moverASlot: (destIdx) => {
-    const { seleccionado, slots } = get();
+    const { seleccionado, slots, formato } = get();
     if (seleccionado === null) return;
     const srcIdx = parseInt(seleccionado);
     if (srcIdx === destIdx) { set({ seleccionado: null }); return; }
@@ -201,7 +217,9 @@ export const usePlantillaStore = create<PlantillaState>((set, get) => ({
     // Intercambia jugadores
     newSlots[srcIdx] = { ...srcSlot, jugadorId: dstSlot.jugadorId };
     newSlots[destIdx] = { ...dstSlot, jugadorId: srcSlot.jugadorId };
-    set({ slots: newSlots, seleccionado: null });
+    // Compacta el banquillo para que no queden huecos
+    const numTitulares = getNumTitulares(formato);
+    set({ slots: compactBench(newSlots, numTitulares), seleccionado: null });
   },
 
   asignarJugadorASlot: (jugadorId, slotIdx) => {
