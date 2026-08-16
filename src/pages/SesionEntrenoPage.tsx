@@ -6,9 +6,9 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  ArrowLeft, Settings, Dumbbell, Users, FileText,
-  Play, CheckCircle2, Star, Plus, Trash2, X,
-  MapPin, Clock, Check, Search, ChevronDown, ChevronUp,
+  ArrowLeft, Settings, Dumbbell, Users, FileText, History,
+  Play, CheckCircle2, Star, Plus, Trash2, X, RotateCcw,
+  MapPin, Clock, Check, Search, ChevronDown, ChevronUp, AlertTriangle,
 } from 'lucide-react';
 import { usePerfilStore }          from '@/stores/perfilStore';
 import { useSesionEntrenoStore }   from '@/stores/sesionEntrenoStore';
@@ -20,7 +20,15 @@ import type {
   RegistroJugadorSesion,
 } from '@/types';
 
-type MainTab = 'ejercicios' | 'jugadores' | 'notas';
+// Lee registros de una sesión pasada desde localStorage (solo lectura)
+function getRegsResumen(sesionId: string): { presentes: number; total: number } {
+  try {
+    const regs: RegistroJugadorSesion[] = JSON.parse(localStorage.getItem(`aq_reg_${sesionId}`) ?? '[]');
+    return { presentes: regs.filter(r => r.asistencia !== 'ausente').length, total: regs.length };
+  } catch { return { presentes: 0, total: 0 }; }
+}
+
+type MainTab = 'ejercicios' | 'jugadores' | 'notas' | 'historial';
 
 const DIAS = ['', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 
@@ -314,6 +322,7 @@ export default function SesionEntrenoPage() {
   const [showFinalizar,    setShowFinalizar]     = useState(false);
   const [guardando,        setGuardando]         = useState(false);
   const [finalizado,       setFinalizado]        = useState(false);
+  const [confirmDelete,    setConfirmDelete]     = useState<string | null>(null); // sesionId a eliminar
 
   // Cargar datos
   useEffect(() => {
@@ -445,11 +454,15 @@ export default function SesionEntrenoPage() {
 
   // ── TABS ──────────────────────────────────────────────────
   const TABS = [
-    { id: 'ejercicios' as MainTab, icon: Dumbbell, label: 'Sesión' },
+    { id: 'ejercicios' as MainTab, icon: Dumbbell, label: 'Sesión'    },
     { id: 'jugadores'  as MainTab, icon: Users,    label: 'Jugadores' },
-    { id: 'notas'      as MainTab, icon: FileText, label: 'Notas' },
+    { id: 'notas'      as MainTab, icon: FileText, label: 'Notas'     },
+    { id: 'historial'  as MainTab, icon: History,  label: 'Historial' },
   ];
   const tabIdx = TABS.findIndex(t => t.id === tab);
+  const sesionesOrdenadas = [...sesionStore.sesiones]
+    .filter(s => s.team_id === activeTeamId)
+    .sort((a, b) => b.creado_en - a.creado_en);
 
   return (
     <div className="flex flex-col min-h-screen bg-quarte-gris">
@@ -489,7 +502,7 @@ export default function SesionEntrenoPage() {
         {/* Tab bar */}
         <div className="relative flex">
           <div className="absolute bottom-0 h-0.5 bg-white pointer-events-none"
-            style={{ width: '33.333%', transform: `translateX(${tabIdx * 100}%)`, transition: 'transform .3s cubic-bezier(.5,0,.2,1)' }} />
+            style={{ width: '25%', transform: `translateX(${tabIdx * 100}%)`, transition: 'transform .3s cubic-bezier(.5,0,.2,1)' }} />
           {TABS.map(t => (
             <button key={t.id} onClick={() => setTab(t.id)}
               className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-titulo font-semibold transition-colors
@@ -684,7 +697,154 @@ export default function SesionEntrenoPage() {
             )}
           </div>
         )}
+
+        {/* ── TAB: HISTORIAL ── */}
+        {tab === 'historial' && (
+          <div className="p-4 max-w-lg mx-auto flex flex-col gap-3">
+
+            <p className="font-titulo text-xs font-bold text-gray-400 uppercase tracking-wider">
+              Todas las sesiones ({sesionesOrdenadas.length})
+            </p>
+
+            {sesionesOrdenadas.length === 0 && (
+              <div className="flex flex-col items-center py-14 text-gray-400 gap-3">
+                <History size={40} className="opacity-20" />
+                <p className="font-titulo font-semibold text-sm">Sin sesiones registradas</p>
+                <p className="text-xs text-center">Las sesiones aparecerán aquí una vez las inicies.</p>
+              </div>
+            )}
+
+            {sesionesOrdenadas.map(s => {
+              const { presentes, total } = getRegsResumen(s.id);
+              const esCurrent = sesionActual?.id === s.id;
+              const STATUS_LABEL: Record<string, { label: string; cls: string }> = {
+                pending:   { label: 'Pendiente',  cls: 'bg-amber-100 text-amber-700' },
+                active:    { label: 'En curso',   cls: 'bg-green-100 text-green-700' },
+                completed: { label: 'Finalizado', cls: 'bg-blue-100 text-blue-700'   },
+              };
+              const { label: stLabel, cls: stCls } = STATUS_LABEL[s.status] ?? STATUS_LABEL.pending;
+
+              return (
+                <div key={s.id}
+                  className={`card flex flex-col gap-3 ${esCurrent ? 'border-2 border-quarte-verde' : ''}`}>
+
+                  {/* Fila superior: fecha + badge + botones */}
+                  <div className="flex items-start gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-titulo font-bold text-sm text-quarte-negro">
+                          {formatFechaCard(s.fecha)}
+                        </p>
+                        {esCurrent && (
+                          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-quarte-verde text-white font-titulo font-bold">
+                            ACTUAL
+                          </span>
+                        )}
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-titulo font-bold ${stCls}`}>
+                          {stLabel}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3 mt-1 flex-wrap text-xs text-gray-400">
+                        <span className="flex items-center gap-1">
+                          <Clock size={10} /> {s.hora_inicio}–{s.hora_fin}
+                        </span>
+                        {s.campo && (
+                          <span className="flex items-center gap-1">
+                            <MapPin size={10} /> {s.campo}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Acciones */}
+                    <div className="flex gap-1.5 flex-shrink-0">
+                      {s.status === 'completed' && (
+                        <button
+                          onClick={() => { sesionStore.reabrirSesion(s.id); setTab('jugadores'); }}
+                          title="Reabrir para editar"
+                          className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200
+                                     flex items-center justify-center text-amber-600
+                                     hover:bg-amber-100 transition-colors">
+                          <RotateCcw size={14} />
+                        </button>
+                      )}
+                      <button
+                        onClick={() => setConfirmDelete(s.id)}
+                        title="Eliminar sesión"
+                        className="w-8 h-8 rounded-xl bg-red-50 border border-red-100
+                                   flex items-center justify-center text-quarte-rojo
+                                   hover:bg-red-100 transition-colors">
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Fila inferior: stats + notas */}
+                  <div className="flex items-center gap-3 flex-wrap">
+                    {total > 0 && (
+                      <span className={`text-xs font-titulo font-bold px-2 py-1 rounded-lg
+                        ${presentes === total ? 'bg-green-50 text-quarte-verde' : 'bg-gray-100 text-gray-600'}`}>
+                        {presentes}/{total} presentes
+                      </span>
+                    )}
+                    {s.exercise_ids.length > 0 && (
+                      <span className="text-xs font-titulo font-semibold text-gray-500">
+                        {s.exercise_ids.length} ejercicios
+                      </span>
+                    )}
+                    {s.valoracion_sesion && (
+                      <span className="flex items-center gap-1 text-xs font-titulo font-bold text-amber-600">
+                        <Star size={12} fill="#F59E0B" stroke="none" />
+                        {s.valoracion_sesion}/5
+                      </span>
+                    )}
+                    {s.notas_generales.trim() && (
+                      <p className="text-xs text-gray-400 italic truncate w-full">
+                        "{s.notas_generales.trim().slice(0, 60)}{s.notas_generales.length > 60 ? '…' : ''}"
+                      </p>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
+
+      {/* Confirm eliminar sesión */}
+      {confirmDelete && (
+        <div className="fixed inset-0 z-50 flex items-end">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setConfirmDelete(null)} />
+          <div className="relative w-full bg-white rounded-t-3xl p-6 flex flex-col gap-4"
+            style={{ animation: 'aq-slideUp .25s cubic-bezier(.5,0,.2,1) both' }}>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center flex-shrink-0">
+                <AlertTriangle size={20} className="text-quarte-rojo" />
+              </div>
+              <div>
+                <p className="font-titulo font-bold text-base text-quarte-negro">¿Eliminar esta sesión?</p>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Se borrarán todos los registros de jugadores y notas. Las estadísticas se actualizarán.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => setConfirmDelete(null)} className="btn-outline flex-1">
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  sesionStore.eliminarSesion(confirmDelete);
+                  setConfirmDelete(null);
+                }}
+                className="flex-1 bg-quarte-rojo text-white rounded-xl py-3 font-titulo font-bold text-sm
+                           flex items-center justify-center gap-2 active:scale-[0.98] transition-transform">
+                <Trash2 size={15} /> Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Confirm finalizar */}
       {showFinalizar && (

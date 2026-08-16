@@ -7,6 +7,7 @@ import type {
   SesionEntrenamiento,
   RegistroJugadorSesion,
 } from '@/types';
+import { DEFAULT_HORARIOS } from '@/data/defaultHorarios';
 
 // ── localStorage helpers ─────────────────────────────────────
 function lsGet<T>(key: string): T[] {
@@ -76,6 +77,8 @@ interface SesionEntrenoState {
   crearSesion:      (teamId: string, fecha: string, h: HorarioEntrenamiento) => SesionEntrenamiento;
   abrirSesion:      (s: SesionEntrenamiento) => void;
   actualizarSesion: (updates: Partial<SesionEntrenamiento>) => void;
+  eliminarSesion:   (sesionId: string) => void;
+  reabrirSesion:    (sesionId: string) => void;
 
   initRegistros:     (jugadores: Array<{ id: string; nombre: string; apellidos: string }>) => void;
   actualizarRegistro:(jugadorId: string, upd: Partial<RegistroJugadorSesion>) => void;
@@ -98,7 +101,19 @@ export const useSesionEntrenoStore = create<SesionEntrenoState>((set, get) => ({
   registros:   [],
 
   cargar: (teamId) => {
-    const horarios = lsGet<HorarioEntrenamiento>(horariosKey(teamId));
+    let horarios = lsGet<HorarioEntrenamiento>(horariosKey(teamId));
+
+    // Siembra los horarios predeterminados del club la primera vez
+    if (horarios.length === 0 && DEFAULT_HORARIOS[teamId]) {
+      horarios = DEFAULT_HORARIOS[teamId].map(h => ({
+        ...h,
+        id: crypto.randomUUID(),
+        team_id: teamId,
+        activo: true,
+      }));
+      lsSet(horariosKey(teamId), horarios);
+    }
+
     const sesiones = lsGet<SesionEntrenamiento>(sesionesKey(teamId));
     set({ teamId, horarios, sesiones, sesionActual: null, registros: [] });
   },
@@ -174,6 +189,31 @@ export const useSesionEntrenoStore = create<SesionEntrenoState>((set, get) => ({
     const updated = [...registros, ...nuevos];
     set({ registros: updated });
     lsSet(registrosKey(sesionActual.id), updated);
+  },
+
+  eliminarSesion: (sesionId) => {
+    const { sesiones, teamId, sesionActual, registros } = get();
+    if (!teamId) return;
+    const updated = sesiones.filter(s => s.id !== sesionId);
+    lsSet(sesionesKey(teamId), updated);
+    try { localStorage.removeItem(registrosKey(sesionId)); } catch {}
+    set({
+      sesiones: updated,
+      sesionActual: sesionActual?.id === sesionId ? null : sesionActual,
+      registros:    sesionActual?.id === sesionId ? []    : registros,
+    });
+  },
+
+  reabrirSesion: (sesionId) => {
+    const { sesiones, teamId } = get();
+    if (!teamId) return;
+    const sesion = sesiones.find(s => s.id === sesionId);
+    if (!sesion) return;
+    const actualizada: SesionEntrenamiento = { ...sesion, status: 'active', finalizado_en: null };
+    const updatedSesiones = sesiones.map(s => s.id === sesionId ? actualizada : s);
+    lsSet(sesionesKey(teamId), updatedSesiones);
+    const registros = lsGet<RegistroJugadorSesion>(registrosKey(sesionId));
+    set({ sesiones: updatedSesiones, sesionActual: actualizada, registros });
   },
 
   actualizarRegistro: (jugadorId, upd) => {
