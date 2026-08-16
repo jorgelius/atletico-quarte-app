@@ -279,6 +279,44 @@ export interface Partido {
   jornada:     number;
 }
 
+// --- SESIÓN DE ENTRENAMIENTO ---
+export interface HorarioEntrenamiento {
+  id: string;
+  team_id: string;
+  dia_semana: number; // 1=Lunes … 5=Viernes
+  hora_inicio: string; // "18:30"
+  hora_fin: string;
+  campo: string;
+  activo: boolean;
+}
+
+export type SesionStatus = 'pending' | 'active' | 'completed';
+
+export interface SesionEntrenamiento {
+  id: string;
+  team_id: string;
+  fecha: string;       // "YYYY-MM-DD"
+  hora_inicio: string;
+  hora_fin: string;
+  campo: string;
+  status: SesionStatus;
+  exercise_ids: string[];
+  notas_generales: string;
+  valoracion_sesion: number | null; // 1-5
+  creado_en: number;
+  finalizado_en: number | null;
+}
+
+export interface RegistroJugadorSesion {
+  id: string;
+  sesion_id: string;
+  jugador_id: string;
+  jugador_nombre: string;
+  asistencia: 'presente' | 'ausente' | 'tarde';
+  valoracion: number | null; // 1-5
+  observacion: string;
+}
+
 export interface ClasificacionRow {
   posicion:        number;
   equipo:          string;

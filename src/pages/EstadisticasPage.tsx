@@ -4,16 +4,18 @@
 // tabla completa de estadísticas individuales sortable.
 // ============================================================
 import { useEffect, useState } from 'react';
-import { BarChart2 } from 'lucide-react';
+import { BarChart2, Dumbbell, Star } from 'lucide-react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell,
 } from 'recharts';
-import { usePerfilStore }       from '@/stores/perfilStore';
-import { usePartidosStore }     from '@/stores/partidosStore';
-import { useEstadisticasStore } from '@/stores/estadisticasStore';
-import { TeamSwitcher }         from '@/components/ui/TeamSwitcher';
-import type { PlayerStats }     from '@/stores/estadisticasStore';
+import { usePerfilStore }           from '@/stores/perfilStore';
+import { usePartidosStore }         from '@/stores/partidosStore';
+import { useEstadisticasStore }     from '@/stores/estadisticasStore';
+import { useSesionEntrenoStore }    from '@/stores/sesionEntrenoStore';
+import { useEntrenamientosStore }   from '@/stores/entrenamientosStore';
+import { TeamSwitcher }             from '@/components/ui/TeamSwitcher';
+import type { PlayerStats }         from '@/stores/estadisticasStore';
 
 type SortCol = 'matches_played' | 'goals' | 'assists' | 'yellow_cards' | 'red_cards' | 'mvps';
 type SortDir = 'desc' | 'asc';
@@ -32,6 +34,9 @@ export default function EstadisticasPage() {
   const partidosStore = usePartidosStore();
   const estadStore    = useEstadisticasStore();
 
+  const sesionStore        = useSesionEntrenoStore();
+  const entrenamientosStore = useEntrenamientosStore();
+
   const [sortCol, setSortCol] = useState<SortCol>('goals');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
 
@@ -39,7 +44,9 @@ export default function EstadisticasPage() {
     if (!activeTeamId) return;
     partidosStore.cargar(activeTeamId);
     estadStore.cargar(activeTeamId);
-  }, [activeTeamId]);
+    sesionStore.cargar(activeTeamId);
+    if (perfil) entrenamientosStore.cargar(perfil.id);
+  }, [activeTeamId, perfil?.id]);
 
   if (!perfil) return null;
 
@@ -85,6 +92,10 @@ export default function EstadisticasPage() {
     if (sortCol === col) setSortDir(d => d === 'desc' ? 'asc' : 'desc');
     else { setSortCol(col); setSortDir('desc'); }
   }
+
+  // ── Stats de entrenamientos ──────────────────────────────────
+  const trainingStats = activeTeamId ? sesionStore.getStatsEquipo(activeTeamId) : null;
+  const hasTrainingStats = trainingStats && trainingStats.sesiones.length > 0;
 
   const cargando = partidosStore.cargando || estadStore.cargando;
 
@@ -387,6 +398,100 @@ export default function EstadisticasPage() {
               </div>
             )}
           </>
+        )}
+
+        {/* ── SECCIÓN ENTRENAMIENTOS ──────────────────────────── */}
+        {hasTrainingStats && trainingStats && (
+          <div className="flex flex-col gap-4">
+
+            {/* Cabecera sección */}
+            <div className="flex items-center gap-2 pt-2">
+              <Dumbbell size={16} className="text-quarte-verde" />
+              <p className="font-titulo font-bold text-sm text-quarte-negro">
+                Estadísticas de entrenamiento
+              </p>
+              <span className="ml-auto text-[10px] font-titulo font-bold bg-quarte-verde/10
+                               text-quarte-verde px-2 py-0.5 rounded-full">
+                {trainingStats.sesiones.length} sesiones
+              </span>
+            </div>
+
+            {/* Tabla por jugador */}
+            {trainingStats.porJugador.length > 0 && (
+              <div className="card p-0 overflow-hidden">
+                <div className="px-4 py-3 border-b border-gray-100">
+                  <p className="font-titulo font-bold text-sm text-quarte-negro">Rendimiento individual</p>
+                  <p className="text-[10px] text-gray-400 mt-0.5">Asistencia y valoración media por jugador</p>
+                </div>
+
+                {/* Cabecera */}
+                <div className="flex items-center gap-1 px-3 py-2 bg-green-50 border-b border-gray-100">
+                  <span className="flex-1 text-xs font-titulo font-bold text-quarte-verde">Jugador</span>
+                  <span className="w-9 text-right text-xs font-titulo font-bold text-quarte-verde">Ses.</span>
+                  <span className="w-12 text-right text-xs font-titulo font-bold text-quarte-verde">Asist.</span>
+                  <span className="w-12 text-right text-xs font-titulo font-bold text-quarte-verde">Rating</span>
+                </div>
+
+                {trainingStats.porJugador.map((p, i) => {
+                  const pct = p.sesiones > 0 ? Math.round((p.presentes / p.sesiones) * 100) : 0;
+                  return (
+                    <div key={p.id}
+                      className={`flex items-center gap-1 px-3 py-2.5 ${i % 2 === 0 ? '' : 'bg-gray-50'}`}>
+                      <div className="w-7 h-7 rounded-lg bg-quarte-verde/20 flex items-center justify-center
+                                      font-titulo font-bold text-quarte-verde text-[10px] flex-shrink-0">
+                        {p.nombre.charAt(0).toUpperCase()}
+                      </div>
+                      <span className="flex-1 font-titulo font-semibold text-xs text-quarte-negro truncate ml-1">
+                        {p.nombre}
+                      </span>
+                      <span className="w-9 text-right font-titulo font-semibold text-xs text-quarte-negro">
+                        {p.sesiones}
+                      </span>
+                      <span className={`w-12 text-right font-titulo font-bold text-xs
+                        ${pct >= 80 ? 'text-quarte-verde' : pct >= 50 ? 'text-amber-500' : 'text-quarte-rojo'}`}>
+                        {pct}%
+                      </span>
+                      <span className="w-12 text-right font-titulo text-xs text-quarte-negro">
+                        {p.avgRating !== null ? (
+                          <span className="flex items-center justify-end gap-0.5">
+                            <Star size={10} fill="#F59E0B" stroke="none" />
+                            {p.avgRating}
+                          </span>
+                        ) : '—'}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Ejercicios más usados */}
+            {trainingStats.ejerciciosMasUsados.length > 0 && (
+              <div className="card flex flex-col gap-3">
+                <p className="font-titulo font-bold text-sm text-quarte-negro">Ejercicios más usados</p>
+                <div className="flex flex-col gap-2">
+                  {trainingStats.ejerciciosMasUsados.map((e, i) => {
+                    const ej = entrenamientosStore.items.find(x => x.id === e.id);
+                    if (!ej) return null;
+                    return (
+                      <div key={e.id} className="flex items-center gap-3">
+                        <span className="w-5 text-xs font-titulo font-bold text-gray-400 text-right">{i + 1}.</span>
+                        <div className="flex-1 bg-gray-100 rounded-full h-2 overflow-hidden">
+                          <div className="bg-quarte-verde h-full rounded-full"
+                            style={{ width: `${(e.count / (trainingStats.ejerciciosMasUsados[0]?.count || 1)) * 100}%` }} />
+                        </div>
+                        <span className="text-xs font-titulo font-semibold text-quarte-negro truncate flex-1 text-right">
+                          {ej.titulo.length > 20 ? ej.titulo.slice(0, 20) + '…' : ej.titulo}
+                        </span>
+                        <span className="text-xs font-titulo font-bold text-quarte-verde w-8 text-right">×{e.count}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+          </div>
         )}
       </div>
     </div>

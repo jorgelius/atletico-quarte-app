@@ -8,12 +8,13 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Users, Dumbbell, LayoutGrid, ChevronRight, ClipboardList,
-  Shield, Calendar, MapPin, ArrowRight,
+  Shield, Calendar, MapPin, ArrowRight, Clock,
 } from 'lucide-react';
-import { usePerfilStore }       from '@/stores/perfilStore';
-import { usePartidosStore }     from '@/stores/partidosStore';
-import { useEstadisticasStore } from '@/stores/estadisticasStore';
-import { useConvocatoriaStore } from '@/stores/convocatoriaStore';
+import { usePerfilStore }         from '@/stores/perfilStore';
+import { usePartidosStore }       from '@/stores/partidosStore';
+import { useEstadisticasStore }   from '@/stores/estadisticasStore';
+import { useConvocatoriaStore }   from '@/stores/convocatoriaStore';
+import { useSesionEntrenoStore }  from '@/stores/sesionEntrenoStore';
 import { TeamSwitcher }         from '@/components/ui/TeamSwitcher';
 import { Avatar }               from '@/components/ui/Avatar';
 import escudoImg                from '@/assets/escudo.png';
@@ -42,6 +43,7 @@ export default function InicioPage() {
   const partidosStore            = usePartidosStore();
   const estadStore               = useEstadisticasStore();
   const convocStore              = useConvocatoriaStore();
+  const sesionStore              = useSesionEntrenoStore();
 
   const [ultimoEntreno, setUltimoEntreno] = useState<UltimoEntreno | null>(null);
 
@@ -49,6 +51,7 @@ export default function InicioPage() {
     if (!perfil || !activeTeamId) return;
     partidosStore.cargar(activeTeamId);
     estadStore.cargar(activeTeamId);
+    sesionStore.cargar(activeTeamId);
     cargarUltimoEntreno(perfil.id);
   }, [activeTeamId]);
 
@@ -92,6 +95,103 @@ export default function InicioPage() {
   }, [proximoPartido?.id]);
 
   const topGoleadores = estadStore.getTopGoleadores(3).filter(p => p.goals > 0);
+
+  // ── Próximo entrenamiento ─────────────────────────────────
+  const proximoEntreno = sesionStore.getProximoEntreno();
+  const hasHorario     = sesionStore.horarios.some(h => h.team_id === activeTeamId && h.activo);
+
+  function formatFechaEntreno(fecha: string): string {
+    const d   = new Date(fecha + 'T12:00:00');
+    const hoy = new Date(); hoy.setHours(0,0,0,0);
+    const man = new Date(hoy); man.setDate(man.getDate() + 1);
+    const fd  = new Date(d);  fd.setHours(0,0,0,0);
+    if (fd.getTime() === hoy.getTime()) return 'HOY';
+    if (fd.getTime() === man.getTime()) return 'MAÑANA';
+    const DAYS   = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+    const MONTHS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    return `${DAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]}`;
+  }
+
+  const ProximoEntrenoInner = () => (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Dumbbell size={16} className="text-quarte-verde" />
+          <p className="font-titulo font-bold text-sm text-quarte-negro">Próximo entrenamiento</p>
+        </div>
+        <button onClick={() => navigate('/sesion-entreno')}
+          className="text-xs text-quarte-verde font-titulo font-semibold hover:underline">
+          Ver sesión
+        </button>
+      </div>
+
+      {!hasHorario ? (
+        <button onClick={() => navigate('/sesion-entreno')}
+          className="flex items-center gap-3 bg-green-50 rounded-xl px-3 py-3 text-left
+                     hover:bg-green-100 transition-colors active:scale-[0.98] border border-green-100">
+          <div className="w-10 h-10 rounded-xl bg-quarte-verde/20 flex items-center justify-center flex-shrink-0">
+            <Dumbbell size={18} className="text-quarte-verde" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-titulo font-semibold text-sm text-quarte-verde">Configura el horario</p>
+            <p className="text-xs text-gray-500 mt-0.5">Define los días y horas de entrenamiento</p>
+          </div>
+          <ChevronRight size={16} className="text-quarte-verde flex-shrink-0" />
+        </button>
+      ) : proximoEntreno.fecha ? (
+        <button onClick={() => navigate('/sesion-entreno')}
+          className="flex items-start gap-3 bg-green-50 rounded-xl p-3 text-left
+                     hover:bg-green-100 transition-colors active:scale-[0.98] border border-green-100">
+          <div className="w-10 h-10 rounded-xl bg-quarte-verde flex items-center justify-center flex-shrink-0">
+            <Dumbbell size={20} className="text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <p className="font-titulo font-bold text-sm text-quarte-negro">
+                {formatFechaEntreno(proximoEntreno.fecha)}
+              </p>
+              {proximoEntreno.sesion && (
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-titulo font-bold
+                  ${proximoEntreno.sesion.status === 'active'
+                    ? 'bg-green-200 text-green-800'
+                    : proximoEntreno.sesion.status === 'completed'
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'bg-amber-100 text-amber-700'}`}>
+                  {proximoEntreno.sesion.status === 'active' ? 'En curso'
+                   : proximoEntreno.sesion.status === 'completed' ? 'Finalizado'
+                   : 'Preparar'}
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-3 mt-1 flex-wrap">
+              {proximoEntreno.horario && (
+                <div className="flex items-center gap-1 text-xs text-gray-500">
+                  <Clock size={11} />
+                  <span>{proximoEntreno.horario.hora_inicio} – {proximoEntreno.horario.hora_fin}</span>
+                </div>
+              )}
+              {proximoEntreno.horario?.campo && (
+                <div className="flex items-center gap-1 text-xs text-gray-500">
+                  <MapPin size={11} />
+                  <span>{proximoEntreno.horario.campo}</span>
+                </div>
+              )}
+            </div>
+            {proximoEntreno.sesion && proximoEntreno.sesion.exercise_ids.length > 0 && (
+              <p className="text-[10px] text-quarte-verde font-titulo font-semibold mt-1">
+                {proximoEntreno.sesion.exercise_ids.length} ejercicios planificados
+              </p>
+            )}
+          </div>
+          <ChevronRight size={16} className="text-quarte-verde flex-shrink-0 mt-1" />
+        </button>
+      ) : (
+        <p className="text-sm text-gray-400 font-cuerpo text-center py-2">
+          Sin entrenamientos programados próximamente
+        </p>
+      )}
+    </div>
+  );
 
   // ── Bloque reutilizable: próximo partido ──────────────────
   const ProximoPartidoInner = () => (
@@ -216,6 +316,9 @@ export default function InicioPage() {
           ))}
         </div>
 
+        {/* Próximo entrenamiento */}
+        <div className="card"><ProximoEntrenoInner /></div>
+
         {/* Próximo partido */}
         <div className="card"><ProximoPartidoInner /></div>
 
@@ -336,6 +439,9 @@ export default function InicioPage() {
           DESKTOP LAYOUT  (≥ md)  — nuevo diseño
       ══════════════════════════════════════════════════════ */}
       <div className="hidden md:block max-w-5xl mx-auto px-6 mt-6 pb-10">
+
+        {/* FILA 0: Próximo Entrenamiento (ancho completo) */}
+        <div className="card mb-4"><ProximoEntrenoInner /></div>
 
         {/* FILA 1: Próximo Partido (grande) + Pasar Lista (lateral) */}
         <div className="grid grid-cols-[1fr_260px] gap-4 mb-4">

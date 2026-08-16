@@ -29,6 +29,7 @@ import PartidosPage         from '@/pages/PartidosPage';
 import ConvocatoriaPage     from '@/pages/ConvocatoriaPage';
 import AsistenciaPage       from '@/pages/AsistenciaPage';
 import PasarListaPage       from '@/pages/PasarListaPage';
+import SesionEntrenoPage    from '@/pages/SesionEntrenoPage';
 
 export default function App() {
   const { inicializarAuth } = usePerfilStore();
@@ -62,6 +63,7 @@ export default function App() {
             <Route path="/tacticas"                            element={<TacticasPage />} />
             <Route path="/pizarra-tactica"                     element={<PizarraTacticaPage />} />
             <Route path="/estadisticas"                        element={<EstadisticasPage />} />
+            <Route path="/sesion-entreno"                      element={<SesionEntrenoPage />} />
             <Route path="/clasificacion"                       element={<ClasificacionPage />} />
             <Route path="/perfil"                              element={<PerfilPage />} />
           </Route>
