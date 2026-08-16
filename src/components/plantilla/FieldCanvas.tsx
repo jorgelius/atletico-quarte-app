@@ -1,7 +1,7 @@
 // ============================================================
 // FieldCanvas — campo de fútbol con fichas de jugadores (Konva)
 // ============================================================
-import { useRef, useEffect, useState, useCallback } from 'react';
+import { useRef, useEffect, useLayoutEffect, useState, useCallback } from 'react';
 import { Stage, Layer, Circle, Text, Group } from 'react-konva';
 import Konva from 'konva';
 import type { Jugador, FormatoPartido } from '@/types';
@@ -122,12 +122,12 @@ export default function FieldCanvas({
   // Ratio del campo según formato
   const RATIO = formato === 'F11' ? 1.54 : 1.5;
 
-  // Responsive sizing
-  useEffect(() => {
+  // Responsive sizing — useLayoutEffect evita el flash inicial con width=320
+  useLayoutEffect(() => {
     const update = () => {
       if (!containerRef.current) return;
       const w = containerRef.current.offsetWidth;
-      setSize({ w, h: Math.round(w * RATIO) });
+      if (w > 0) setSize({ w, h: Math.round(w * RATIO) });
     };
     update();
     const ro = new ResizeObserver(update);

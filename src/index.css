@@ -69,6 +69,17 @@
     display: none;
   }
 
+  /* Safe area — barra inferior iPhone/iPad con muesca */
+  .safe-area-padding-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* Padding inferior para el contenido principal en móvil:
+     altura del navbar (~64px) + safe area de iPhone */
+  .pb-nav-safe {
+    padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
+  }
+
   /* Botón táctil grande (accesible en campo) */
   .btn-touch {
     @apply min-h-[48px] px-5 py-3 rounded-xl font-titulo font-semibold text-sm

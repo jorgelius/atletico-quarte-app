@@ -3,7 +3,7 @@
 // Tabs: Alineación | Jugadores
 // ============================================================
 import { useEffect, useRef, useState } from 'react';
-import { Users, Save, Download, Trash2, ChevronDown, ClipboardList, CheckCircle2, XCircle, Loader2, Check } from 'lucide-react';
+import { Users, Save, Download, Trash2, ChevronDown, ClipboardList, CheckCircle2, XCircle, Loader2, Check, Target } from 'lucide-react';
 import Konva from 'konva';
 import { usePerfilStore } from '@/stores/perfilStore';
 import { usePlantillaStore } from '@/stores/plantillaStore';
@@ -127,9 +127,9 @@ export default function PlantillaPage() {
       {/* Tabs */}
       {(() => {
         const TABS = [
-          { id: 'alineacion' as Tab, label: '⚽ Alineación' },
-          { id: 'jugadores'  as Tab, label: '👥 Jugadores'  },
-          { id: 'asistencia' as Tab, label: '📋 Asistencia' },
+          { id: 'alineacion' as Tab, icon: Target,      label: 'Alineación' },
+          { id: 'jugadores'  as Tab, icon: Users,       label: 'Jugadores'  },
+          { id: 'asistencia' as Tab, icon: ClipboardList, label: 'Asistencia' },
         ];
         const idx = TABS.findIndex(t => t.id === tab);
         return (
@@ -142,8 +142,10 @@ export default function PlantillaPage() {
               }} />
             {TABS.map(t => (
               <button key={t.id} onClick={() => setTab(t.id)}
-                className={`flex-1 py-2.5 text-xs font-titulo font-semibold transition-colors
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs
+                            font-titulo font-semibold transition-colors
                   ${tab === t.id ? 'text-white' : 'text-blue-300 hover:text-white'}`}>
+                <t.icon size={13} />
                 {t.label}
               </button>
             ))}
@@ -210,7 +212,7 @@ export default function PlantillaPage() {
                 Banquillo ({banqSlots.filter(s => s.jugadorId).length}/{numBanq})
               </p>
               <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                {banqSlots.map(slot => {
+                {banqSlots.map((slot) => {
                   const jug = slot.jugadorId ? jugadorMap.get(slot.jugadorId) : undefined;
                   const isSel = store.seleccionado === String(slot.slotIdx);
                   return (
@@ -238,6 +240,8 @@ export default function PlantillaPage() {
                     </button>
                   );
                 })}
+                {/* Espaciador: evita que el último slot quede cortado al borde */}
+                <div className="flex-shrink-0 w-3" aria-hidden="true" />
               </div>
             </div>
 

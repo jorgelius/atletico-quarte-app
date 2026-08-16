@@ -40,6 +40,8 @@ export default function FiltrosBar({ filtro, onChange }: Props) {
             {c}
           </button>
         ))}
+        {/* Espaciador: evita que el último chip quede cortado al borde */}
+        <div className="flex-shrink-0 w-4" aria-hidden="true" />
       </div>
 
     </div>
