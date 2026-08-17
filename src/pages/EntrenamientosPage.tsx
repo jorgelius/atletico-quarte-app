@@ -3,27 +3,44 @@
 // Tabs: Biblioteca | Favoritos | Mis ejercicios
 // ============================================================
 import { useEffect, useState } from 'react';
-import { Dumbbell, Plus, Star, BookOpen, User } from 'lucide-react';
-import { usePerfilStore } from '@/stores/perfilStore';
+import { useNavigate } from 'react-router-dom';
+import { Dumbbell, Plus, Star, BookOpen, User, Clock, MapPin, ChevronRight, Play, CheckCircle2 } from 'lucide-react';
+import { usePerfilStore }         from '@/stores/perfilStore';
 import { useEntrenamientosStore } from '@/stores/entrenamientosStore';
-import EntrenamientoCard from '@/components/entrenamientos/EntrenamientoCard';
-import EntrenamientoDetalle from '@/components/entrenamientos/EntrenamientoDetalle';
-import EntrenamientoForm from '@/components/entrenamientos/EntrenamientoForm';
-import FiltrosBar from '@/components/entrenamientos/FiltrosBar';
-import type { Entrenamiento } from '@/types';
+import { useSesionEntrenoStore }  from '@/stores/sesionEntrenoStore';
+import EntrenamientoCard          from '@/components/entrenamientos/EntrenamientoCard';
+import EntrenamientoDetalle       from '@/components/entrenamientos/EntrenamientoDetalle';
+import EntrenamientoForm          from '@/components/entrenamientos/EntrenamientoForm';
+import FiltrosBar                 from '@/components/entrenamientos/FiltrosBar';
+import type { Entrenamiento }     from '@/types';
+
+function formatFechaEntreno(fecha: string): string {
+  const d   = new Date(fecha + 'T12:00:00');
+  const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+  const man = new Date(hoy); man.setDate(man.getDate() + 1);
+  const fd  = new Date(d);  fd.setHours(0, 0, 0, 0);
+  if (fd.getTime() === hoy.getTime()) return 'HOY';
+  if (fd.getTime() === man.getTime()) return 'MAÑANA';
+  const DAYS   = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+  const MONTHS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+  return `${DAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]}`;
+}
 
 type Tab = 'biblioteca' | 'favoritos' | 'mios';
 type View = { mode: 'list' } | { mode: 'detail'; id: string } | { mode: 'form'; item?: Entrenamiento };
 
 export default function EntrenamientosPage() {
-  const { perfil }  = usePerfilStore();
-  const store       = useEntrenamientosStore();
+  const { perfil, activeTeamId } = usePerfilStore();
+  const store                    = useEntrenamientosStore();
+  const sesionStore              = useSesionEntrenoStore();
+  const navigate                 = useNavigate();
   const [tab,  setTab]  = useState<Tab>('biblioteca');
   const [view, setView] = useState<View>({ mode: 'list' });
 
   useEffect(() => {
     if (perfil) store.cargar(perfil.id);
-  }, [perfil?.id]);
+    if (activeTeamId) sesionStore.cargar(activeTeamId);
+  }, [perfil?.id, activeTeamId]);
 
   if (!perfil) return null;
   const canSugerir = perfil.rol === 'admin' || perfil.rol === 'coordinador';
@@ -116,6 +133,74 @@ export default function EntrenamientosPage() {
 
       <div className="flex-1 overflow-y-auto">
         <div className="p-4 max-w-lg mx-auto flex flex-col gap-3">
+
+          {/* ── Próximo entrenamiento ── */}
+          {(() => {
+            const { sesion, horario, fecha } = sesionStore.getProximoEntreno();
+            const hasHorario = sesionStore.horarios.some(h => h.team_id === activeTeamId && h.activo);
+            if (!hasHorario && !sesion) return (
+              <button onClick={() => navigate('/sesion-entreno')}
+                className="flex items-center gap-3 bg-green-50 border border-green-100 rounded-2xl px-4 py-3
+                           text-left hover:bg-green-100 transition-colors active:scale-[0.98]">
+                <div className="w-9 h-9 rounded-xl bg-quarte-verde/20 flex items-center justify-center flex-shrink-0">
+                  <Dumbbell size={16} className="text-quarte-verde" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-titulo font-semibold text-sm text-quarte-verde">Configura el horario de entrenamiento</p>
+                  <p className="text-xs text-gray-500">Define días y horas para preparar sesiones</p>
+                </div>
+                <ChevronRight size={15} className="text-quarte-verde flex-shrink-0" />
+              </button>
+            );
+            if (!fecha) return null;
+            const statusBadge =
+              sesion?.status === 'active'    ? { label: 'En curso',   cls: 'bg-green-200 text-green-800' } :
+              sesion?.status === 'completed' ? { label: 'Finalizado', cls: 'bg-blue-100 text-blue-700'   } :
+                                              { label: 'Preparar',   cls: 'bg-amber-100 text-amber-700' };
+            return (
+              <button onClick={() => navigate('/sesion-entreno')}
+                className="flex items-center gap-3 bg-green-50 border border-green-100 rounded-2xl px-4 py-3
+                           text-left hover:bg-green-100 transition-colors active:scale-[0.98]">
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0
+                  ${sesion?.status === 'active' ? 'bg-quarte-verde' : 'bg-quarte-verde/20'}`}>
+                  {sesion?.status === 'active'
+                    ? <Play size={16} className="text-white" />
+                    : sesion?.status === 'completed'
+                    ? <CheckCircle2 size={16} className="text-quarte-verde" />
+                    : <Dumbbell size={16} className="text-quarte-verde" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="font-titulo font-bold text-sm text-quarte-negro">
+                      {formatFechaEntreno(fecha)}
+                    </p>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-titulo font-bold ${statusBadge.cls}`}>
+                      {statusBadge.label}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3 text-xs text-gray-500 mt-0.5 flex-wrap">
+                    {horario && (
+                      <span className="flex items-center gap-1">
+                        <Clock size={10} /> {horario.hora_inicio}–{horario.hora_fin}
+                      </span>
+                    )}
+                    {horario?.campo && (
+                      <span className="flex items-center gap-1">
+                        <MapPin size={10} /> {horario.campo}
+                      </span>
+                    )}
+                    {sesion && sesion.exercise_ids.length > 0 && (
+                      <span className="font-titulo font-semibold text-quarte-verde">
+                        {sesion.exercise_ids.length} ejercicios
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <ChevronRight size={15} className="text-quarte-verde flex-shrink-0" />
+              </button>
+            );
+          })()}
+
           {/* Filtros (solo en biblioteca) */}
           {tab === 'biblioteca' && (
             <FiltrosBar filtro={store.filtro} onChange={store.setFiltro} />
