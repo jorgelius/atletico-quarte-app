@@ -211,6 +211,7 @@ interface Props {
   equipo:     string;
   onGuardar:  (squad: MatchSquad[]) => Promise<void>;
   onBack:     () => void;
+  compact?:   boolean; // cuando true, sin header azul ni min-h-screen (para embeber en tab)
 }
 
 // ============================================================
@@ -218,7 +219,7 @@ interface Props {
 // ============================================================
 export default function ConvocatoriaEditor({
   partido, jugadores, statsAsistencia, initialSquad,
-  equipo, onGuardar, onBack,
+  equipo, onGuardar, onBack, compact = false,
 }: Props) {
   const { maxConvocados, numTitulares } = detectarLimites(equipo);
   const jugadoresIds = new Set(jugadores.map(j => j.id));
@@ -246,6 +247,11 @@ export default function ConvocatoriaEditor({
     setGuardando(true);
     try {
       await onGuardar(squad);
+      if (compact) {
+        showToast('ok', '¡Convocatoria guardada!');
+        setGuardando(false);
+      }
+      // en modo normal el padre navega fuera, así que no reseteamos
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       showToast('error', `Error al guardar: ${msg.slice(0, 60)}`);
@@ -403,6 +409,242 @@ export default function ConvocatoriaEditor({
   // ── Render ───────────────────────────────────────────────────
   const lleno = squad.length >= maxConvocados;
 
+  const pdfTemplate = (
+    <div style={{ position: 'fixed', left: '-9999px', top: '-9999px', zIndex: -1 }}>
+      <ConvocatoriaPDFTemplate
+        ref={pdfRef}
+        partido={partido}
+        jugadores={jugadores}
+        squad={squad}
+        equipo={equipo}
+      />
+    </div>
+  );
+
+  const toastEl = toast ? (
+    <div className={`fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[999]
+                     flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl
+                     text-base font-titulo font-bold whitespace-nowrap
+                     ${toast.tipo === 'ok' ? 'bg-quarte-verde text-white' : 'bg-quarte-rojo text-white'}`}>
+      {toast.tipo === 'ok' ? <CheckCircle2 size={24} /> : <XCircle size={24} />}
+      {toast.msg}
+    </div>
+  ) : null;
+
+  const counterBar = (
+    <div className="bg-white border-b border-gray-100 px-4 py-2.5 flex items-center justify-between">
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1.5">
+          <Users size={14} className="text-quarte-azul" />
+          <span className="font-titulo font-bold text-sm text-quarte-negro">
+            {squad.length}/{maxConvocados}
+          </span>
+        </div>
+        <span className="text-xs text-gray-400">
+          {titulares.length} titulares · {suplentes.length} suplentes
+        </span>
+      </div>
+      {lleno && (
+        <div className="flex items-center gap-1 text-amber-600 text-xs font-titulo font-semibold">
+          <AlertCircle size={12} />
+          Completa
+        </div>
+      )}
+    </div>
+  );
+
+  const panelSelector = (
+    <div className="flex bg-white border-b border-gray-100">
+      <button
+        onClick={() => setPanel('disponibles')}
+        className={`flex-1 py-2.5 text-xs font-titulo font-semibold transition-colors border-b-2
+          ${panel === 'disponibles'
+            ? 'text-quarte-azul border-quarte-azul'
+            : 'text-gray-400 border-transparent hover:text-gray-600'}`}>
+        Plantilla disponible ({disponibles.length})
+      </button>
+      <button
+        onClick={() => setPanel('convocados')}
+        className={`flex-1 py-2.5 text-xs font-titulo font-semibold transition-colors border-b-2
+          ${panel === 'convocados'
+            ? 'text-quarte-azul border-quarte-azul'
+            : 'text-gray-400 border-transparent hover:text-gray-600'}`}>
+        Convocados ({squad.length})
+      </button>
+    </div>
+  );
+
+  const panelDisponibles = (
+    <div className="p-3 max-w-lg mx-auto flex flex-col gap-2">
+      {disponibles.length === 0 ? (
+        <div className="flex flex-col items-center py-12 text-gray-400 gap-3">
+          <Users size={40} className="opacity-20" />
+          <p className="font-titulo font-semibold text-sm">
+            {lleno ? 'Convocatoria completa' : 'Todos los jugadores ya están convocados'}
+          </p>
+        </div>
+      ) : (
+        <>
+          {lleno && (
+            <div className="flex items-center gap-2 bg-amber-50 rounded-xl px-3 py-2
+                            text-xs text-amber-700 font-titulo font-semibold">
+              <AlertCircle size={14} />
+              Has alcanzado el máximo de {maxConvocados} convocados.
+            </div>
+          )}
+          {disponibles.map(j => {
+            const pct = getPct(j.id);
+            return (
+              <button
+                key={j.id}
+                onClick={() => agregarJugador(j)}
+                disabled={lleno}
+                className="flex items-center gap-3 bg-white rounded-xl px-3 py-3 shadow-sm
+                           hover:shadow-md active:scale-[0.98] transition-all
+                           disabled:opacity-50 disabled:cursor-not-allowed text-left w-full">
+                <MiniAvatar foto={j.foto_b64} nombre={j.nombre} posicion={j.posicion} />
+                <div className="flex-1 min-w-0">
+                  <p className="font-titulo font-semibold text-sm text-quarte-negro truncate">
+                    #{j.dorsal} {j.nombre} {j.apellidos}
+                  </p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className={`text-[10px] font-titulo font-bold px-1.5 py-0.5 rounded-md ${POSICION_COLOR[j.posicion]}`}>
+                      {POSICION_LABEL[j.posicion]}
+                    </span>
+                    {pct > 0 && (
+                      <span className={`text-[10px] font-titulo font-semibold
+                        ${pct >= 80 ? 'text-quarte-verde' : pct >= 60 ? 'text-amber-500' : 'text-quarte-rojo'}`}>
+                        {pct}% asistencia
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <span className="text-quarte-azul text-xs font-titulo font-semibold flex-shrink-0">
+                  + Añadir
+                </span>
+              </button>
+            );
+          })}
+        </>
+      )}
+    </div>
+  );
+
+  const panelConvocados = (
+    <div className="p-3 max-w-lg mx-auto flex flex-col gap-3">
+      {squad.length === 0 ? (
+        <div className="flex flex-col items-center py-12 text-gray-400 gap-3">
+          <Users size={40} className="opacity-20" />
+          <p className="font-titulo font-semibold text-sm">Sin convocados todavía</p>
+          <button onClick={() => setPanel('disponibles')}
+            className="text-xs text-quarte-azul font-titulo font-semibold hover:underline">
+            Ir a la plantilla →
+          </button>
+        </div>
+      ) : (
+        <>
+          {titulares.length > 0 && (
+            <div>
+              <p className="font-titulo text-xs font-bold text-quarte-azul uppercase tracking-wider mb-2 px-1">
+                Titulares ({titulares.length}/{numTitulares})
+              </p>
+              <div className="flex flex-col gap-1.5">
+                {titulares.map(sq => {
+                  const jug = jugadores.find(j => j.id === sq.player_id);
+                  return (
+                    <JugadorConvocadoCard key={sq.id}
+                      squad={sq} jugador={jug}
+                      onToggleStarter={() => toggleStarter(sq.id)}
+                      onUpdateStatus={s => updateStatus(sq.id, s)}
+                      onUpdateJersey={n => updateJersey(sq.id, n)}
+                      onUpdateNotes={n => updateNotes(sq.id, n)}
+                      onQuitar={() => quitarJugador(sq.id)}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          {suplentes.length > 0 && (
+            <div>
+              <p className="font-titulo text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 px-1">
+                Suplentes ({suplentes.length})
+              </p>
+              <div className="flex flex-col gap-1.5">
+                {suplentes.map(sq => {
+                  const jug = jugadores.find(j => j.id === sq.player_id);
+                  return (
+                    <JugadorConvocadoCard key={sq.id}
+                      squad={sq} jugador={jug}
+                      onToggleStarter={() => toggleStarter(sq.id)}
+                      onUpdateStatus={s => updateStatus(sq.id, s)}
+                      onUpdateJersey={n => updateJersey(sq.id, n)}
+                      onUpdateNotes={n => updateNotes(sq.id, n)}
+                      onQuitar={() => quitarJugador(sq.id)}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          {titulares.length < numTitulares && (
+            <div className="flex items-center gap-2 bg-amber-50 rounded-xl px-3 py-2 text-xs text-amber-700 font-titulo">
+              <AlertCircle size={14} />
+              Faltan {numTitulares - titulares.length} titulares para completar el equipo.
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+
+  // ── Modo compacto (embebido en tab) ──────────────────────────
+  if (compact) {
+    return (
+      <div className="flex flex-col">
+        {/* Barra de acciones compacta */}
+        <div className="bg-white border-b border-gray-100 px-3 py-2 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <button onClick={compartir} disabled={squad.length === 0}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-titulo font-semibold
+                          disabled:opacity-40 transition-all duration-300
+                          ${copiado
+                            ? 'bg-quarte-verde text-white scale-105'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+              {copiado ? <Check size={12} /> : <Share2 size={12} />}
+              {copiado ? '¡Copiado!' : 'Texto'}
+            </button>
+            <button onClick={handleExportPDF} disabled={squad.length === 0 || exportando}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-100 hover:bg-gray-200
+                         text-xs font-titulo font-semibold text-gray-600 disabled:opacity-40 transition-colors">
+              {exportando
+                ? <span className="w-3 h-3 border-2 border-gray-500 border-t-transparent rounded-full animate-spin" />
+                : <FileDown size={12} />}
+              PDF
+            </button>
+          </div>
+          <button onClick={handleGuardar} disabled={guardando}
+            className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-quarte-rojo hover:bg-red-700
+                       text-xs font-titulo font-semibold text-white disabled:opacity-60 transition-colors">
+            {guardando
+              ? <Loader2 size={12} className="animate-spin" />
+              : <Save size={12} />}
+            {guardando ? 'Guardando…' : 'Guardar'}
+          </button>
+        </div>
+        {counterBar}
+        {panelSelector}
+        <div>
+          {panel === 'disponibles' && panelDisponibles}
+          {panel === 'convocados'  && panelConvocados}
+        </div>
+        {toastEl}
+        {pdfTemplate}
+      </div>
+    );
+  }
+
+  // ── Modo normal (página completa) ────────────────────────────
   return (
     <div className="flex flex-col min-h-screen bg-quarte-gris">
       {/* Header */}
@@ -417,7 +659,6 @@ export default function ConvocatoriaEditor({
             vs {partido.rival_name} · {formatFechaCorta(partido.date)}
           </p>
         </div>
-        {/* Copiar texto */}
         <button onClick={compartir} disabled={squad.length === 0}
           className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-titulo font-semibold
                       disabled:opacity-40 transition-all duration-300
@@ -427,7 +668,6 @@ export default function ConvocatoriaEditor({
           {copiado ? <Check size={14} /> : <Share2 size={14} />}
           {copiado ? '¡Copiado!' : 'Texto'}
         </button>
-        {/* Descargar PDF */}
         <button onClick={handleExportPDF} disabled={squad.length === 0 || exportando}
           className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/20 hover:bg-white/30
                      text-xs font-titulo font-semibold disabled:opacity-40 transition-colors">
@@ -436,7 +676,6 @@ export default function ConvocatoriaEditor({
             : <FileDown size={14} />}
           PDF
         </button>
-        {/* Guardar */}
         <button onClick={handleGuardar} disabled={guardando}
           className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-quarte-rojo hover:bg-red-700
                      text-xs font-titulo font-semibold disabled:opacity-60 transition-colors">
@@ -447,205 +686,16 @@ export default function ConvocatoriaEditor({
         </button>
       </div>
 
-      {/* Contador y selector de panel (mobile-first) */}
-      <div className="bg-white border-b border-gray-100 px-4 py-2.5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5">
-            <Users size={14} className="text-quarte-azul" />
-            <span className="font-titulo font-bold text-sm text-quarte-negro">
-              {squad.length}/{maxConvocados}
-            </span>
-          </div>
-          <span className="text-xs text-gray-400">
-            {titulares.length} titulares · {suplentes.length} suplentes
-          </span>
-        </div>
-        {lleno && (
-          <div className="flex items-center gap-1 text-amber-600 text-xs font-titulo font-semibold">
-            <AlertCircle size={12} />
-            Completa
-          </div>
-        )}
-      </div>
-
-      {/* Tab selector */}
-      <div className="flex bg-white border-b border-gray-100">
-        <button
-          onClick={() => setPanel('disponibles')}
-          className={`flex-1 py-2.5 text-xs font-titulo font-semibold transition-colors border-b-2
-            ${panel === 'disponibles'
-              ? 'text-quarte-azul border-quarte-azul'
-              : 'text-gray-400 border-transparent hover:text-gray-600'}`}>
-          Plantilla disponible ({disponibles.length})
-        </button>
-        <button
-          onClick={() => setPanel('convocados')}
-          className={`flex-1 py-2.5 text-xs font-titulo font-semibold transition-colors border-b-2
-            ${panel === 'convocados'
-              ? 'text-quarte-azul border-quarte-azul'
-              : 'text-gray-400 border-transparent hover:text-gray-600'}`}>
-          Convocados ({squad.length})
-        </button>
-      </div>
+      {counterBar}
+      {panelSelector}
 
       <div className="flex-1 overflow-y-auto">
-
-        {/* ── PANEL IZQUIERDO: Disponibles ── */}
-        {panel === 'disponibles' && (
-          <div className="p-3 max-w-lg mx-auto flex flex-col gap-2">
-            {disponibles.length === 0 ? (
-              <div className="flex flex-col items-center py-12 text-gray-400 gap-3">
-                <Users size={40} className="opacity-20" />
-                <p className="font-titulo font-semibold text-sm">
-                  {lleno ? 'Convocatoria completa' : 'Todos los jugadores ya están convocados'}
-                </p>
-              </div>
-            ) : (
-              <>
-                {lleno && (
-                  <div className="flex items-center gap-2 bg-amber-50 rounded-xl px-3 py-2
-                                  text-xs text-amber-700 font-titulo font-semibold">
-                    <AlertCircle size={14} />
-                    Has alcanzado el máximo de {maxConvocados} convocados.
-                  </div>
-                )}
-                {disponibles.map(j => {
-                  const pct = getPct(j.id);
-                  return (
-                    <button
-                      key={j.id}
-                      onClick={() => agregarJugador(j)}
-                      disabled={lleno}
-                      className="flex items-center gap-3 bg-white rounded-xl px-3 py-3 shadow-sm
-                                 hover:shadow-md active:scale-[0.98] transition-all
-                                 disabled:opacity-50 disabled:cursor-not-allowed text-left w-full">
-                      <MiniAvatar foto={j.foto_b64} nombre={j.nombre} posicion={j.posicion} />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-titulo font-semibold text-sm text-quarte-negro truncate">
-                          #{j.dorsal} {j.nombre} {j.apellidos}
-                        </p>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          <span className={`text-[10px] font-titulo font-bold px-1.5 py-0.5 rounded-md ${POSICION_COLOR[j.posicion]}`}>
-                            {POSICION_LABEL[j.posicion]}
-                          </span>
-                          {pct > 0 && (
-                            <span className={`text-[10px] font-titulo font-semibold
-                              ${pct >= 80 ? 'text-quarte-verde' : pct >= 60 ? 'text-amber-500' : 'text-quarte-rojo'}`}>
-                              {pct}% asistencia
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <span className="text-quarte-azul text-xs font-titulo font-semibold flex-shrink-0">
-                        + Añadir
-                      </span>
-                    </button>
-                  );
-                })}
-              </>
-            )}
-          </div>
-        )}
-
-        {/* ── PANEL DERECHO: Convocados ── */}
-        {panel === 'convocados' && (
-          <div className="p-3 max-w-lg mx-auto flex flex-col gap-3">
-            {squad.length === 0 ? (
-              <div className="flex flex-col items-center py-12 text-gray-400 gap-3">
-                <Users size={40} className="opacity-20" />
-                <p className="font-titulo font-semibold text-sm">Sin convocados todavía</p>
-                <button onClick={() => setPanel('disponibles')}
-                  className="text-xs text-quarte-azul font-titulo font-semibold hover:underline">
-                  Ir a la plantilla →
-                </button>
-              </div>
-            ) : (
-              <>
-                {/* Titulares */}
-                {titulares.length > 0 && (
-                  <div>
-                    <p className="font-titulo text-xs font-bold text-quarte-azul uppercase
-                                  tracking-wider mb-2 px-1">
-                      Titulares ({titulares.length}/{numTitulares})
-                    </p>
-                    <div className="flex flex-col gap-1.5">
-                      {titulares.map(sq => {
-                        const jug = jugadores.find(j => j.id === sq.player_id);
-                        return (
-                          <JugadorConvocadoCard key={sq.id}
-                            squad={sq} jugador={jug}
-                            onToggleStarter={() => toggleStarter(sq.id)}
-                            onUpdateStatus={s => updateStatus(sq.id, s)}
-                            onUpdateJersey={n => updateJersey(sq.id, n)}
-                            onUpdateNotes={n => updateNotes(sq.id, n)}
-                            onQuitar={() => quitarJugador(sq.id)}
-                          />
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* Suplentes */}
-                {suplentes.length > 0 && (
-                  <div>
-                    <p className="font-titulo text-xs font-bold text-gray-500 uppercase
-                                  tracking-wider mb-2 px-1">
-                      Suplentes ({suplentes.length})
-                    </p>
-                    <div className="flex flex-col gap-1.5">
-                      {suplentes.map(sq => {
-                        const jug = jugadores.find(j => j.id === sq.player_id);
-                        return (
-                          <JugadorConvocadoCard key={sq.id}
-                            squad={sq} jugador={jug}
-                            onToggleStarter={() => toggleStarter(sq.id)}
-                            onUpdateStatus={s => updateStatus(sq.id, s)}
-                            onUpdateJersey={n => updateJersey(sq.id, n)}
-                            onUpdateNotes={n => updateNotes(sq.id, n)}
-                            onQuitar={() => quitarJugador(sq.id)}
-                          />
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* Aviso si faltan titulares */}
-                {titulares.length < numTitulares && (
-                  <div className="flex items-center gap-2 bg-amber-50 rounded-xl px-3 py-2
-                                  text-xs text-amber-700 font-titulo">
-                    <AlertCircle size={14} />
-                    Faltan {numTitulares - titulares.length} titulares para completar el equipo.
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        )}
+        {panel === 'disponibles' && panelDisponibles}
+        {panel === 'convocados'  && panelConvocados}
       </div>
 
-      {/* Toast — igual que PlantillaPage */}
-      {toast && (
-        <div className={`fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[999]
-                         flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl
-                         text-base font-titulo font-bold whitespace-nowrap
-                         ${toast.tipo === 'ok' ? 'bg-quarte-verde text-white' : 'bg-quarte-rojo text-white'}`}>
-          {toast.tipo === 'ok' ? <CheckCircle2 size={24} /> : <XCircle size={24} />}
-          {toast.msg}
-        </div>
-      )}
-
-      {/* Template oculto para generación de PDF */}
-      <div style={{ position: 'fixed', left: '-9999px', top: '-9999px', zIndex: -1 }}>
-        <ConvocatoriaPDFTemplate
-          ref={pdfRef}
-          partido={partido}
-          jugadores={jugadores}
-          squad={squad}
-          equipo={equipo}
-        />
-      </div>
+      {toastEl}
+      {pdfTemplate}
     </div>
   );
 }

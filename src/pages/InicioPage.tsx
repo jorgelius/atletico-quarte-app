@@ -213,7 +213,7 @@ export default function InicioPage() {
         </div>
       ) : proximoPartido ? (
         <button
-          onClick={() => navigate('/partidos')}
+          onClick={() => navigate(`/partidos/${proximoPartido.id}`)}
           className="flex items-start gap-3 bg-quarte-azulClaro rounded-xl p-3 text-left
                      hover:bg-blue-100 transition-colors active:scale-[0.98]">
           <div className="w-10 h-10 rounded-xl bg-quarte-azul flex items-center justify-center flex-shrink-0">
