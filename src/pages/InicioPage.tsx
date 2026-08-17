@@ -8,7 +8,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Users, Dumbbell, LayoutGrid, ChevronRight, ClipboardList,
-  Shield, Calendar, MapPin, ArrowRight, Clock,
+  Shield, Calendar, MapPin, Clock,
 } from 'lucide-react';
 import { usePerfilStore }         from '@/stores/perfilStore';
 import { usePartidosStore }       from '@/stores/partidosStore';
@@ -419,20 +419,6 @@ export default function InicioPage() {
           </div>
         )}
 
-        {/* Pasar lista */}
-        <button onClick={() => navigate('/pasar-lista')}
-          className="card flex items-center gap-4 w-full text-left active:scale-[0.98] transition-transform
-                     hover:shadow-md">
-          <div className="w-12 h-12 rounded-2xl bg-quarte-azul flex items-center justify-center flex-shrink-0">
-            <ClipboardList size={24} className="text-white" />
-          </div>
-          <div className="flex-1">
-            <p className="font-titulo font-bold text-quarte-negro">Pasar lista</p>
-            <p className="text-xs text-gray-400">Registra la asistencia del equipo</p>
-          </div>
-          <ChevronRight size={18} className="text-gray-400" />
-        </button>
-
       </div>
 
       {/* ══════════════════════════════════════════════════════
@@ -443,27 +429,9 @@ export default function InicioPage() {
         {/* FILA 0: Próximo Entrenamiento (ancho completo) */}
         <div className="card mb-4"><ProximoEntrenoInner /></div>
 
-        {/* FILA 1: Próximo Partido (grande) + Pasar Lista (lateral) */}
-        <div className="grid grid-cols-[1fr_260px] gap-4 mb-4">
-
-          {/* Próximo Partido */}
+        {/* FILA 1: Próximo Partido (ancho completo) */}
+        <div className="mb-4">
           <div className="card"><ProximoPartidoInner /></div>
-
-          {/* Pasar Lista — tarjeta vertical */}
-          <button onClick={() => navigate('/pasar-lista')}
-            className="card flex flex-col items-start justify-between gap-3 p-5 text-left
-                       hover:shadow-lg active:scale-[0.98] transition-all min-h-[160px]">
-            <div className="w-14 h-14 rounded-2xl bg-quarte-verde flex items-center justify-center shadow">
-              <ClipboardList size={28} className="text-white" />
-            </div>
-            <div>
-              <p className="font-titulo font-bold text-xl text-quarte-negro leading-tight">Pasar lista</p>
-              <p className="text-xs text-gray-400 mt-1">Registra la asistencia del equipo</p>
-            </div>
-            <span className="flex items-center gap-1 text-xs font-titulo font-bold text-quarte-azul tracking-wide">
-              ABRIR <ArrowRight size={12} />
-            </span>
-          </button>
         </div>
 
         {/* FILA 2: Grid de secciones */}
