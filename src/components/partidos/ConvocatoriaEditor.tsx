@@ -288,7 +288,6 @@ export default function ConvocatoriaEditor({
       created_at:        new Date().toISOString(),
     };
     setSquad(prev => [...prev, newEntry]);
-    setPanel('convocados');
   }, [squad.length, maxConvocados, titulares.length, numTitulares, partido.id]);
 
   const quitarJugador = useCallback((id: string) => {

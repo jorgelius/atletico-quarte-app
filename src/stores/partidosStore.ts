@@ -25,7 +25,8 @@ interface PartidosState {
   guardarPartido:  (p: Match) => Promise<void>;
   eliminarPartido: (id: string) => Promise<void>;
   cambiarEstado:   (id: string, status: Match['status']) => Promise<void>;
-  cargarEventos:   (matchId: string) => Promise<void>;
+  cargarEventos:    (matchId: string) => Promise<void>;
+  limpiarResultado: (matchId: string) => Promise<void>;
   guardarResultado: (
     matchId: string,
     goalsFor: number,
@@ -94,6 +95,24 @@ export const usePartidosStore = create<PartidosState>((set) => ({
       .order('minute', { ascending: true, nullsFirst: false });
     if (error) console.error('[Supabase] cargarEventos:', error.message);
     set(s => ({ eventos: { ...s.eventos, [matchId]: (data ?? []) as MatchEvent[] } }));
+  },
+
+  limpiarResultado: async (matchId) => {
+    const now = new Date().toISOString();
+    const { error } = await supabase
+      .from('matches')
+      .update({ goals_for: 0, goals_against: 0, status: 'scheduled', updated_at: now })
+      .eq('id', matchId);
+    if (error) throw new Error(error.message);
+    await supabase.from('match_events').delete().eq('match_id', matchId);
+    set(s => ({
+      partidos: s.partidos.map(p =>
+        p.id === matchId
+          ? { ...p, goals_for: 0, goals_against: 0, status: 'scheduled', updated_at: now }
+          : p
+      ),
+      eventos: { ...s.eventos, [matchId]: [] },
+    }));
   },
 
   guardarResultado: async (matchId, goalsFor, goalsAgainst, borradores) => {

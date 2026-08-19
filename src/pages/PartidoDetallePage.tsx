@@ -7,7 +7,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Edit2, ClipboardList, Users, Trophy,
   Calendar, MapPin, Clock, Plus, Check, ChevronDown,
-  AlertTriangle, Trash2, X, Save, Loader2, CheckCircle2, XCircle,
+  AlertTriangle, Trash2, X, Save, Loader2, CheckCircle2, XCircle, RotateCcw,
 } from 'lucide-react';
 import { usePerfilStore }       from '@/stores/perfilStore';
 import { usePartidosStore, type EventoDraft } from '@/stores/partidosStore';
@@ -48,8 +48,8 @@ function PlanTab({
   const [notes,    setNotes]    = useState(partido.notes ?? '');
   const [saving,   setSaving]   = useState(false);
   const [saved,    setSaved]    = useState(false);
-  const [confirmCancel, setConfirmCancel] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmCancel,  setConfirmCancel]  = useState(false);
+  const [confirmLimpiar, setConfirmLimpiar] = useState(false);
   const navigate = useNavigate();
 
   async function handleSaveNotes() {
@@ -66,11 +66,6 @@ function PlanTab({
 
   async function handleCancelar() {
     await store.cambiarEstado(partido.id, 'cancelled');
-    navigate('/partidos');
-  }
-
-  async function handleEliminar() {
-    await store.eliminarPartido(partido.id);
     navigate('/partidos');
   }
 
@@ -217,6 +212,15 @@ function PlanTab({
 
       {/* Acciones */}
       <div className="flex flex-col gap-2 mt-2">
+        {partido.status === 'played' && (
+          <button onClick={() => setConfirmLimpiar(true)}
+            className="flex items-center justify-center gap-2 py-2.5 rounded-xl
+                       border-2 border-gray-300 text-sm font-titulo font-semibold text-gray-500
+                       hover:border-amber-400 hover:text-amber-600 transition-colors">
+            <RotateCcw size={16} /> Limpiar resultado
+          </button>
+        )}
+
         {partido.status !== 'cancelled' && partido.status !== 'played' && (
           <>
             {!confirmCancel ? (
@@ -244,31 +248,30 @@ function PlanTab({
           </>
         )}
 
-        {!confirmDelete ? (
-          <button onClick={() => setConfirmDelete(true)}
-            className="flex items-center justify-center gap-2 py-2.5 rounded-xl
-                       text-quarte-rojo text-sm font-titulo font-semibold
-                       hover:bg-red-50 transition-colors">
-            <Trash2 size={16} /> Eliminar partido
-          </button>
-        ) : (
-          <div className="card flex flex-col gap-3 border-2 border-red-200">
-            <p className="text-sm font-cuerpo text-quarte-negro">
-              ¿Eliminar el partido vs <strong>{partido.rival_name}</strong>? Esta acción no se puede deshacer.
+      </div>
+
+      {/* Overlay confirmación limpiar resultado */}
+      {confirmLimpiar && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setConfirmLimpiar(false)} />
+          <div className="relative bg-white w-full max-w-lg rounded-t-[2rem] p-6 flex flex-col gap-4">
+            <p className="font-titulo font-bold text-base text-quarte-negro">¿Limpiar el resultado?</p>
+            <p className="text-sm font-cuerpo text-gray-500">
+              Se borrarán el marcador y todos los eventos del acta. El partido vuelve a estado pendiente.
             </p>
-            <div className="flex gap-2">
-              <button onClick={() => setConfirmDelete(false)}
-                className="flex-1 py-2 rounded-xl border-2 border-gray-300 text-sm font-titulo font-semibold text-gray-600">
+            <div className="flex gap-3">
+              <button onClick={() => setConfirmLimpiar(false)}
+                className="flex-1 py-2.5 rounded-xl border-2 border-gray-300 text-sm font-titulo font-semibold text-gray-600">
                 Cancelar
               </button>
-              <button onClick={handleEliminar}
-                className="flex-1 py-2 rounded-xl bg-quarte-rojo text-white text-sm font-titulo font-semibold">
-                Sí, eliminar
+              <button onClick={async () => { await store.limpiarResultado(partido.id); setConfirmLimpiar(false); }}
+                className="flex-1 py-2.5 rounded-xl bg-amber-500 text-white text-sm font-titulo font-semibold">
+                Sí, limpiar
               </button>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
