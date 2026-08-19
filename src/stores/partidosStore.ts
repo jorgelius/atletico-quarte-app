@@ -46,7 +46,7 @@ export const usePartidosStore = create<PartidosState>((set) => ({
       .from('matches')
       .select('*')
       .eq('team_id', teamId)
-      .order('date', { ascending: false });
+      .order('date', { ascending: true });
     if (error) console.error('[Supabase] cargar partidos:', error.message);
     set({ partidos: (data ?? []) as Match[], cargando: false });
   },
@@ -150,5 +150,5 @@ export const usePartidosStore = create<PartidosState>((set) => ({
 }));
 
 function byDateDesc(a: Match, b: Match) {
-  return b.date.localeCompare(a.date);
+  return a.date.localeCompare(b.date);
 }
