@@ -94,7 +94,7 @@ export default function PerfilPage() {
               {perfil.nombre}
             </p>
             <p className="text-gray-600 text-sm truncate">
-              {(perfil.team_ids ?? []).map(id => getEquipoNombre(id)).join(' · ') || perfil.equipo}
+              {(perfil.team_ids ?? []).map(id => getEquipoNombre(id)).join(' · ') || getEquipoNombre(perfil.equipo)}
             </p>
             <Badge variante="azul" className="mt-1.5">
               {LABEL_ROL[perfil.rol] ?? perfil.rol}
@@ -122,7 +122,7 @@ export default function PerfilPage() {
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-titulo font-semibold text-sm text-quarte-negro">
-              Sincronizado con Supabase
+              ☁️ Datos guardados en la nube
             </p>
             <p className="text-xs text-gray-400 truncate">
               {session?.user?.email}
