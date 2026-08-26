@@ -7,16 +7,8 @@ import type { Profile, Rol } from '@/types';
 import { InputField } from './InputField';
 import { SelectField } from './SelectField';
 import { Avatar } from './Avatar';
+import { getEquipoNombre } from '@/data/equipos';
 
-const EQUIPOS_SUGERIDOS = [
-  'Prebenjamín A', 'Prebenjamín B',
-  'Benjamín A', 'Benjamín B',
-  'Alevín A', 'Alevín B',
-  'Infantil A', 'Infantil B',
-  'Cadete A', 'Cadete B',
-  'Juvenil A', 'Primer Equipo',
-  'Coordinación', 'Club (general)',
-];
 
 const ROLES: { value: Rol; label: string }[] = [
   { value: 'entrenador',   label: '⚽ Entrenador/a' },
@@ -34,7 +26,6 @@ interface PerfilFormProps {
 
 interface Errores {
   nombre?: string;
-  equipo?: string;
 }
 
 // Convierte un File a base64
@@ -55,7 +46,6 @@ export function PerfilForm({
   onCancelar,
 }: PerfilFormProps) {
   const [nombre,    setNombre]   = useState(perfilInicial.nombre   ?? '');
-  const [equipo,    setEquipo]   = useState(perfilInicial.equipo   ?? '');
   const [rol,       setRol]      = useState<Rol>(perfilInicial.rol ?? 'entrenador');
   const [foto,      setFoto]     = useState<string | undefined>(perfilInicial.avatar_b64);
   const [guardando, setGuardando] = useState(false);
@@ -66,8 +56,7 @@ export function PerfilForm({
   // Validación básica
   function validar(): boolean {
     const e: Errores = {};
-    if (!nombre.trim())     e.nombre = 'El nombre es obligatorio';
-    if (!equipo.trim())     e.equipo = 'El equipo es obligatorio';
+    if (!nombre.trim()) e.nombre = 'El nombre es obligatorio';
     setErrores(e);
     return Object.keys(e).length === 0;
   }
@@ -92,7 +81,7 @@ export function PerfilForm({
     try {
       await onGuardar({
         nombre:     nombre.trim(),
-        equipo:     equipo.trim(),
+        equipo:     perfilInicial.equipo ?? '',
         team_ids:   perfilInicial.team_ids ?? [],
         rol,
         avatar_b64: foto,
@@ -142,39 +131,18 @@ export function PerfilForm({
         autoComplete="name"
       />
 
-      {/* Equipo — datalist para sugerencias */}
+      {/* Equipo — solo lectura, derivado de team_ids */}
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="equipo" className="font-titulo font-semibold text-sm text-quarte-negro">
+        <label className="font-titulo font-semibold text-sm text-quarte-negro">
           Equipo
         </label>
-        <input
-          id="equipo"
-          list="equipos-list"
-          value={equipo}
-          onChange={e => {
-            setEquipo(e.target.value);
-            if (errores.equipo) setErrores(prev => ({ ...prev, equipo: undefined }));
-          }}
-          placeholder="Ej: Alevín A"
-          className={`
-            w-full min-h-[48px] px-4 py-3 rounded-xl border-2 text-base
-            font-cuerpo text-quarte-negro bg-white
-            transition-colors outline-none
-            ${errores.equipo
-              ? 'border-quarte-rojo focus:border-quarte-rojo'
-              : 'border-gray-200 focus:border-quarte-azul'
-            }
-            placeholder:text-gray-400
-          `}
-        />
-        <datalist id="equipos-list">
-          {EQUIPOS_SUGERIDOS.map(eq => (
-            <option key={eq} value={eq} />
-          ))}
-        </datalist>
-        {errores.equipo && (
-          <p className="text-xs text-quarte-rojo font-medium">{errores.equipo}</p>
-        )}
+        <div className="w-full min-h-[48px] px-4 py-3 rounded-xl border-2 border-gray-200
+                        bg-gray-50 text-base font-cuerpo text-quarte-negro flex items-center">
+          {(perfilInicial.team_ids ?? []).map(id => getEquipoNombre(id)).join(' · ')
+            || getEquipoNombre(perfilInicial.equipo ?? '')
+            || '—'}
+        </div>
+        <p className="text-xs text-gray-400">El equipo se cambia desde el selector principal de la app.</p>
       </div>
 
       {/* Rol */}
