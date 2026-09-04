@@ -1,6 +1,6 @@
 // Modal de anotaciones / edición rápida de un jugador en campo
 import { useState, useRef } from 'react';
-import { X, Save } from 'lucide-react';
+import { X, Save, Phone, User } from 'lucide-react';
 import type { Jugador, Posicion } from '@/types';
 
 const POSICIONES: { value: Posicion; label: string }[] = [
@@ -33,11 +33,14 @@ function fileABase64(file: File): Promise<string> {
 }
 
 export default function JugadorModal({ jugador, onGuardar, onCerrar }: Props) {
-  const [nombre,   setNombre]   = useState(jugador.nombre);
-  const [dorsal,   setDorsal]   = useState(jugador.dorsal);
-  const [posicion, setPosicion] = useState<Posicion>(jugador.posicion);
-  const [notas,    setNotas]    = useState(jugador.notas ?? '');
-  const [foto,     setFoto]     = useState(jugador.foto_b64);
+  const [nombre,         setNombre]         = useState(jugador.nombre);
+  const [dorsal,         setDorsal]         = useState(jugador.dorsal);
+  const [posicion,       setPosicion]       = useState<Posicion>(jugador.posicion);
+  const [notas,          setNotas]          = useState(jugador.notas ?? '');
+  const [foto,           setFoto]           = useState(jugador.foto_b64);
+  const [tutorNombre,    setTutorNombre]    = useState(jugador.tutor_nombre ?? '');
+  const [tutorTel,       setTutorTel]       = useState(jugador.tutor_telefono ?? '');
+  const [tutorTel2,      setTutorTel2]      = useState(jugador.tutor_telefono2 ?? '');
   const fileRef = useRef<HTMLInputElement>(null);
 
   async function handleFoto(e: React.ChangeEvent<HTMLInputElement>) {
@@ -47,7 +50,12 @@ export default function JugadorModal({ jugador, onGuardar, onCerrar }: Props) {
   }
 
   function handleSave() {
-    onGuardar({ ...jugador, nombre, dorsal, posicion, notas, foto_b64: foto });
+    onGuardar({
+      ...jugador, nombre, dorsal, posicion, notas, foto_b64: foto,
+      tutor_nombre:    tutorNombre.trim()  || undefined,
+      tutor_telefono:  tutorTel.trim()     || undefined,
+      tutor_telefono2: tutorTel2.trim()    || undefined,
+    });
   }
 
   return (
@@ -135,6 +143,36 @@ export default function JugadorModal({ jugador, onGuardar, onCerrar }: Props) {
               rows={3} placeholder="Observaciones, lesiones, rendimiento…"
               className="w-full px-3 py-2.5 rounded-xl border-2 border-gray-200
                          focus:border-quarte-azul outline-none text-sm font-cuerpo resize-none" />
+          </div>
+
+          {/* Contacto familiar */}
+          <div className="flex flex-col gap-2 pt-1">
+            <p className="font-titulo text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+              <User size={12} /> Contacto familiar
+            </p>
+            <input
+              value={tutorNombre} onChange={e => setTutorNombre(e.target.value)}
+              placeholder="Nombre del padre / madre / tutor"
+              className="w-full px-3 py-2.5 rounded-xl border-2 border-gray-200
+                         focus:border-quarte-azul outline-none text-sm font-cuerpo" />
+            <div className="flex gap-2">
+              <div className="flex-1 relative">
+                <Phone size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                <input
+                  type="tel" value={tutorTel} onChange={e => setTutorTel(e.target.value)}
+                  placeholder="Teléfono principal"
+                  className="w-full pl-8 pr-3 py-2.5 rounded-xl border-2 border-gray-200
+                             focus:border-quarte-azul outline-none text-sm font-cuerpo" />
+              </div>
+              <div className="flex-1 relative">
+                <Phone size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                <input
+                  type="tel" value={tutorTel2} onChange={e => setTutorTel2(e.target.value)}
+                  placeholder="Teléfono alternativo"
+                  className="w-full pl-8 pr-3 py-2.5 rounded-xl border-2 border-gray-200
+                             focus:border-quarte-azul outline-none text-sm font-cuerpo" />
+              </div>
+            </div>
           </div>
 
           <button onClick={handleSave}

@@ -32,6 +32,9 @@ export interface Jugador {
   foto_b64?: string;
   notas?: string;
   creado_en: number;
+  tutor_nombre?: string;
+  tutor_telefono?: string;
+  tutor_telefono2?: string;
 }
 
 // --- ALINEACIÓN ---

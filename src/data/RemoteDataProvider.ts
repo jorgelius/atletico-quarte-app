@@ -60,14 +60,17 @@ function profileToDb(p: Profile) {
 // App usa:  owner_id / foto_b64 / notas / creado_en
 function dbToJugador(r: Record<string, unknown>): Jugador {
   return {
-    id:        r.id as string,
-    owner_id:  (r.owner_id as string) ?? '',
-    nombre:    (r.nombre as string) ?? '',
-    apellidos: (r.apellidos as string) ?? '',
-    dorsal:    (r.dorsal as number) ?? 0,
-    posicion:  (r.posicion as Posicion) ?? 'DEF',
-    foto_b64:  (r.foto_url as string | undefined) || undefined,
-    notas:     (r.observaciones as string | undefined) || undefined,
+    id:               r.id as string,
+    owner_id:         (r.owner_id as string) ?? '',
+    nombre:           (r.nombre as string) ?? '',
+    apellidos:        (r.apellidos as string) ?? '',
+    dorsal:           (r.dorsal as number) ?? 0,
+    posicion:         (r.posicion as Posicion) ?? 'DEF',
+    foto_b64:         (r.foto_url as string | undefined) || undefined,
+    notas:            (r.observaciones as string | undefined) || undefined,
+    tutor_nombre:     (r.tutor_nombre as string | undefined) || undefined,
+    tutor_telefono:   (r.tutor_telefono as string | undefined) || undefined,
+    tutor_telefono2:  (r.tutor_telefono2 as string | undefined) || undefined,
     creado_en: r.created_at
       ? new Date(r.created_at as string).getTime()
       : Date.now(),
@@ -75,14 +78,17 @@ function dbToJugador(r: Record<string, unknown>): Jugador {
 }
 function jugadorToDb(j: Jugador) {
   return {
-    id:            j.id,
-    owner_id:      j.owner_id,
-    nombre:        j.nombre,
-    apellidos:     j.apellidos,
-    dorsal:        j.dorsal,
-    posicion:      j.posicion,
-    foto_url:      j.foto_b64 ?? null,
-    observaciones: j.notas ?? null,
+    id:              j.id,
+    owner_id:        j.owner_id,
+    nombre:          j.nombre,
+    apellidos:       j.apellidos,
+    dorsal:          j.dorsal,
+    posicion:        j.posicion,
+    foto_url:        j.foto_b64 ?? null,
+    observaciones:   j.notas ?? null,
+    tutor_nombre:    j.tutor_nombre ?? null,
+    tutor_telefono:  j.tutor_telefono ?? null,
+    tutor_telefono2: j.tutor_telefono2 ?? null,
   };
 }
 

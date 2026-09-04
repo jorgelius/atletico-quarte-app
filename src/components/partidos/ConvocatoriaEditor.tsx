@@ -190,6 +190,30 @@ function JugadorConvocadoCard({
                          focus:border-quarte-azul outline-none text-xs font-cuerpo" />
           </div>
 
+          {/* Contacto familiar */}
+          {(jugador?.tutor_telefono || jugador?.tutor_telefono2) && (
+            <div className="flex flex-col gap-1.5">
+              <p className="text-xs font-titulo font-semibold text-gray-500">
+                {jugador.tutor_nombre ? `Contacto · ${jugador.tutor_nombre}` : 'Contacto familiar'}
+              </p>
+              {[jugador.tutor_telefono, jugador.tutor_telefono2].filter(Boolean).map((tel, i) => (
+                <div key={i} className="flex gap-2">
+                  <a href={`tel:${tel}`}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl
+                               bg-quarte-azulClaro text-quarte-azul text-xs font-titulo font-bold">
+                    📞 Llamar{jugador.tutor_telefono2 && i === 0 ? ' (1)' : jugador.tutor_telefono2 && i === 1 ? ' (2)' : ''}
+                  </a>
+                  <a href={`https://wa.me/${tel!.replace(/[\s\-+]/g, '')}`}
+                    target="_blank" rel="noopener noreferrer"
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl
+                               bg-green-50 text-green-700 text-xs font-titulo font-bold">
+                    💬 WhatsApp
+                  </a>
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* Quitar */}
           <button onClick={onQuitar}
             className="flex items-center gap-1.5 text-xs font-titulo font-semibold text-quarte-rojo
