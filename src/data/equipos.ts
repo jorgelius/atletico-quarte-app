@@ -35,6 +35,7 @@ export const EQUIPOS: Equipo[] = [
   { id: '10000000-0000-0000-0000-00000000000b', nombre: 'Prebenjamín B',  sub: 'Sub-8'  },
   { id: '10000000-0000-0000-0000-00000000000c', nombre: 'Juvenil',        sub: 'Sub-18' },
   { id: '10000000-0000-0000-0000-00000000000d', nombre: 'Regional',       sub: 'Senior' },
+  { id: '10000000-0000-0000-0000-00000000000e', nombre: 'Escuela',        sub: 'Sub-6'  },
 ];
 
 export const EQUIPOS_MAP = new Map<string, Equipo>(EQUIPOS.map(e => [e.id, e]));
@@ -43,7 +44,7 @@ export function getEquipoNombre(id: string): string {
   return EQUIPOS_MAP.get(id)?.nombre ?? id;
 }
 
-const F7_SUBS = new Set(['Sub-8', 'Sub-10']);
+const F7_SUBS = new Set(['Sub-6', 'Sub-8', 'Sub-10']);
 
 /** Devuelve el formato de campo obligatorio según la categoría del equipo. */
 export function getFormatoEquipo(teamId: string): FormatoPartido {
@@ -53,6 +54,10 @@ export function getFormatoEquipo(teamId: string): FormatoPartido {
 
 // ── Grupos para el selector de onboarding ───────────────────
 export const GRUPOS_EQUIPOS_SELECTOR = [
+  {
+    label: 'Escuela',
+    equipos: EQUIPOS.filter(e => ['10000000-0000-0000-0000-00000000000e'].includes(e.id)),
+  },
   {
     label: 'Prebenjamín',
     equipos: EQUIPOS.filter(e => ['10000000-0000-0000-0000-00000000000a', '10000000-0000-0000-0000-00000000000b'].includes(e.id)),
